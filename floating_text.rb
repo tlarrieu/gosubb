@@ -16,3 +16,10 @@ class FloatingText < Chingu::Text
 		after(options[:timer]) { self.destroy! }
 	end
 end
+
+class FPSText < Chingu::Text
+	def update
+		super
+		self.text = "FPS : #{$window.fps}"
+	end
+end

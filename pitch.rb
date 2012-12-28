@@ -22,6 +22,8 @@ class Pitch < GameState
 		@background  = Image["pitch.jpg"]
 		@sound       = Sample["turnover.ogg"]
 		@active_team = 0
+
+		@fps = FPSText.create "fps", :x => 10, :y => 10
 		
 		self.input   = { :mouse_right => :action, :mouse_left => :select, :return => :turnover!, :escape => :show_menu, :e => :edit }
 
@@ -96,29 +98,7 @@ class Pitch < GameState
 
 	def update
 		super
-		if @action_coords.nil?
-			@ma_squares.each { |s| s.destroy! }
-			@ma_squares.clear
-			unless @selected.nil? or not @selected.moving? or not @selected.can_move?
-				if @selected.team == @active_team
-					w, color = @selected.cur_ma, :green
-				else
-					w, color = 1, :red
-				end
-
-				p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2
-				(-w..w).each do |i|
-					(-w..w).each do |j|
-						x, y   = [@selected.pos, [i,j]].transpose.map { |c| c.reduce(:+)}
-						c_rect = Rect.new x, y, 1, 1
-						if self[[x,y]].nil? and p_rect.collide_rect? c_rect
-							x, y = Measures.to_screen_coords [x,y]
-							@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color )
-						end
-					end
-				end
-			end
-		end
+		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
 	end
 
 	def select
@@ -127,29 +107,7 @@ class Pitch < GameState
 			@last_selected = @selected unless @selected.nil?
 			@selected      = self[pos]
 			@action_coords = nil
-			#if @action_coords.nil?
-				@ma_squares.each { |s| s.destroy! }
-				@ma_squares.clear
-				unless @selected.nil? or not @selected.moving? or not @selected.can_move?
-					if @selected.team == @active_team
-						w, color = @selected.cur_ma, :green
-					else
-						w, color = 1, :red
-					end
-
-					p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2
-					(-w..w).each do |i|
-						(-w..w).each do |j|
-							x, y   = [@selected.pos, [i,j]].transpose.map { |c| c.reduce(:+)}
-							c_rect = Rect.new x, y, 1, 1
-							if self[[x,y]].nil? and p_rect.collide_rect? c_rect
-								x, y = Measures.to_screen_coords [x,y]
-								@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color )
-							end
-						end
-					end
-				end
-			#end
+			show_movement
 		end
 	end
 
@@ -159,16 +117,7 @@ class Pitch < GameState
 			unless @selected.nil?
 				if @action_coords.nil? or @action_coords != [x,y]
 					if @selected.can_move_to? x, y
-						@ma_squares.each { |s| s.destroy! }
-						@ma_squares.clear
-						path = Measures.a_star self, @selected.pos, [x,y]
-						if path.length <= @selected.cur_ma
-							path.each do |p| 
-								i, j = Measures.to_screen_coords p
-								@ma_squares << Square.create( :x => i, :y => j, :type => :ma, :color => :green ) 
-							end
-							@action_coords = [x,y]
-						end
+						show_path x, y
 					elsif @selected.can_pass_to? self[[x,y]]
 						@action_coords = [x,y]
 					end
@@ -185,6 +134,43 @@ class Pitch < GameState
 	end
 
 	private
+
+	def show_movement
+		@ma_squares.each { |s| s.destroy! }
+		@ma_squares.clear
+		unless @selected.nil? or not @selected.moving? or not @selected.can_move?
+			if @selected.team == @active_team
+				w, color = @selected.cur_ma, :green
+			else
+				w, color = 1, :red
+			end
+
+			p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2
+			(-w..w).each do |i|
+				(-w..w).each do |j|
+					x, y   = [@selected.pos, [i,j]].transpose.map { |c| c.reduce(:+)}
+					c_rect = Rect.new x, y, 1, 1
+					if self[[x,y]].nil? and p_rect.collide_rect? c_rect
+						x, y = Measures.to_screen_coords [x,y]
+						@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color )
+					end
+				end
+			end
+		end
+	end
+
+	def show_path x, y
+		@ma_squares.each { |s| s.destroy! }
+		@ma_squares.clear
+		path = Measures.a_star self, @selected.pos, [x,y]
+		if path.length <= @selected.cur_ma
+			path.each do |p| 
+				i, j = Measures.to_screen_coords p
+				@ma_squares << Square.create( :x => i, :y => j, :type => :ma, :color => :green ) 
+			end
+			@action_coords = [x,y]
+		end
+	end
 
 	def randomize
 		1.upto(11) do

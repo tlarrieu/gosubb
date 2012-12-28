@@ -52,12 +52,14 @@ class Player < GameObject
 	
 	def draw
 		if @team == @pitch.active_team
-			if @cur_ma == @stats[:ma]
-				@square = Square.new :x => @x, :y => @y, :type => :state, :color => :green
-			elsif @cur_ma == 0 or not can_move?
-				@square = Square.new :x => @x, :y => @y, :type => :state, :color => :red
+			if can_move?
+				if @cur_ma == @stats[:ma]
+					@square = Square.new :x => @x, :y => @y, :type => :state, :color => :green
+				else
+					@square = Square.new :x => @x, :y => @y, :type => :state, :color => :orange
+				end
 			else
-				@square = Square.new :x => @x, :y => @y, :type => :state, :color => :orange
+				@square = Square.new :x => @x, :y => @y, :type => :state, :color => :red
 			end
 			@square.draw unless @square.nil?
 		end
@@ -162,11 +164,11 @@ class Player < GameObject
 				@ball.scatter!
 				event! :fumble
 			else
-				_coords = @ball.scatter! 3, target_player.pos
-				if @pitch[_coords].nil?
+				coords = @ball.scatter! 3, target_player.pos
+				if @pitch[coords].nil?
 					event! :fail
 				else
-					event! :pass if @pitch[_coords] == target_player
+					event! :pass if @pitch[coords] == target_player
 				end
 			end
 			return true

@@ -81,11 +81,11 @@ class Menu < BasicGameObject
 			item = if key.is_a? String
 				opt = options.dup
 				opt[:color] = @unselect_color
-				Text.new(key, opt)
+				Text.new key, opt
 			elsif key.is_a? Image
-				GameObject.new(options.merge!(:image => key))
+				GameObject.new options.merge!(:image => key)
 			elsif key.is_a? GameObject
-				key.options.merge!(options.dup)
+				key.options.merge! options.dup
 				key
 			end
 
@@ -118,7 +118,7 @@ class Menu < BasicGameObject
 		@selected = options[:selected] || 0
 		step(0)
 
-		self.input = {:up => lambda{step(-1)}, :down => lambda{step(1)}, [:return, :space] => :select}
+		self.input = {:up => lambda{step(-1)}, :down => lambda{step(1)}, [:return, :space, :mouse_left] => :select}
 	end
 
 	#
@@ -127,8 +127,7 @@ class Menu < BasicGameObject
 	def step(value)
 		selected.options[:on_deselect].call(selected)
 		@selected += value
-		@selected = @items.count-1 if @selected < 0
-		@selected = 0 if @selected == @items.count
+		@selected %= @items.count
 		selected.options[:on_select].call(selected)
 	end
 
@@ -146,6 +145,26 @@ class Menu < BasicGameObject
 
 	def on_select(object)
 		object.color = @select_color
+	end
+
+	def update
+		i = 0
+		# This should be done with :bounding_box trait but I cant seem
+		# to add a trait to items for some reasons
+		begin
+			@items.each do |item|
+				x = $window.mouse_x
+				y = $window.mouse_y
+				#if item.x <= x and item.x + item.width >= x
+					if item.y <= y and item.y +  item.height >= y
+						step(i - @selected) if @selected != i
+					end
+				#end
+				i += 1
+			end
+		rescue
+			nil
+		end
 	end
 
 	def draw
