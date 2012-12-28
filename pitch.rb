@@ -1,7 +1,6 @@
 require 'chingu'
 include Chingu
 include Gosu
-require 'singleton'
 
 require "player"
 
@@ -18,14 +17,13 @@ class Pitch < GameState
 	MARGIN_LEFT = 8
 	MARGIN_TOP  = 5
 
-
 	def initialize
 		super
 		@background  = Image["pitch.jpg"]
 		@sound       = Sample["turnover.ogg"]
 		@active_team = 0
-
-		self.input = { :mouse_right => :action, :mouse_left => :select, :return => :turnover!, :escape => :show_menu, :e => :edit }
+		
+		self.input   = { :mouse_right => :action, :mouse_left => :select, :return => :turnover!, :escape => :show_menu, :e => :edit }
 
 		x, y  = Measures.to_screen_coords [12, 8]
 		@ball = Ball.create :pitch => self
@@ -70,8 +68,12 @@ class Pitch < GameState
 
 
 	def turnover!
+		lock
 		@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => @background.height / 2.0, :timer => 3000, :color => 0xFFFF0000, :size => 40
-		@text.after(3000) { unlock }
+		@text.after(3000) do
+			unlock
+			new_turn!
+		end
 	end
 
 	def turnover?
@@ -94,7 +96,29 @@ class Pitch < GameState
 
 	def update
 		super
-		new_turn! if turnover? and @barrier == 0
+		if @action_coords.nil?
+			@ma_squares.each { |s| s.destroy! }
+			@ma_squares.clear
+			unless @selected.nil? or not @selected.moving? or not @selected.can_move?
+				if @selected.team == @active_team
+					w, color = @selected.cur_ma, :green
+				else
+					w, color = 1, :red
+				end
+
+				p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2
+				(-w..w).each do |i|
+					(-w..w).each do |j|
+						x, y   = [@selected.pos, [i,j]].transpose.map { |c| c.reduce(:+)}
+						c_rect = Rect.new x, y, 1, 1
+						if self[[x,y]].nil? and p_rect.collide_rect? c_rect
+							x, y = Measures.to_screen_coords [x,y]
+							@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color )
+						end
+					end
+				end
+			end
+		end
 	end
 
 	def select
@@ -102,7 +126,8 @@ class Pitch < GameState
 		if @barrier == 0
 			@last_selected = @selected unless @selected.nil?
 			@selected      = self[pos]
-			if @action_coords.nil?
+			@action_coords = nil
+			#if @action_coords.nil?
 				@ma_squares.each { |s| s.destroy! }
 				@ma_squares.clear
 				unless @selected.nil? or not @selected.moving? or not @selected.can_move?
@@ -124,7 +149,7 @@ class Pitch < GameState
 						end
 					end
 				end
-			end
+			#end
 		end
 	end
 

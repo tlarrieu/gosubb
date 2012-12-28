@@ -21,16 +21,7 @@ class Game < Window
 		self.cursor  = true
 		self.factor  = 1
 
-		@selected      = nil
-		@last_selected = nil
-		@ma_squares    = []
-
-		@barrier       = 0
-		@turnover      = false
-		@action_coords = nil
-
-		@pitch = Pitch.new
-		push_game_state @pitch, :setup => true
+		push_game_state Pitch.new, :setup => true
 	end
 
 	def update
