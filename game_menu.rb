@@ -153,13 +153,10 @@ class Menu < BasicGameObject
 		# to add a trait to items for some reasons
 		begin
 			@items.each do |item|
-				x = $window.mouse_x
 				y = $window.mouse_y
-				#if item.x <= x and item.x + item.width >= x
-					if item.y <= y and item.y +  item.height >= y
-						step(i - @selected) if @selected != i
-					end
-				#end
+				if item.y - item.height / 2.0 <= y and item.y +  item.height / 2.0 >= y
+					step(i - @selected) if @selected != i
+				end
 				i += 1
 			end
 		rescue

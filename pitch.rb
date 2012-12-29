@@ -3,6 +3,8 @@ include Chingu
 include Gosu
 
 require "player"
+require "ball"
+require "game_menu"
 
 class Pitch < GameState
 
@@ -70,11 +72,11 @@ class Pitch < GameState
 
 
 	def turnover!
-		lock
-		@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => @background.height / 2.0, :timer => 3000, :color => 0xFFFF0000, :size => 40
-		@text.after(3000) do
-			unlock
+		unless turnover?
+			lock
 			new_turn!
+			@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => @background.height / 2.0, :timer => 3000, :color => 0xFFFF0000, :size => 40
+			@text.after(2200) { unlock }
 		end
 	end
 
@@ -93,6 +95,7 @@ class Pitch < GameState
 
 	def draw
 		@background.draw 0,0,0
+		@ma_squares.each { |s| s.draw }
 		super
 	end
 
@@ -138,7 +141,9 @@ class Pitch < GameState
 	def show_movement
 		@ma_squares.each { |s| s.destroy! }
 		@ma_squares.clear
-		unless @selected.nil? or not @selected.moving? or not @selected.can_move?
+		
+		
+		unless @selected.nil? or not @selected.moving?# or not @selected.can_move?
 			if @selected.team == @active_team
 				w, color = @selected.cur_ma, :green
 			else
@@ -152,7 +157,7 @@ class Pitch < GameState
 					c_rect = Rect.new x, y, 1, 1
 					if self[[x,y]].nil? and p_rect.collide_rect? c_rect
 						x, y = Measures.to_screen_coords [x,y]
-						@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color )
+						@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color, :alpha => 180 )
 					end
 				end
 			end

@@ -2,8 +2,6 @@ require 'chingu'
 include Chingu
 include Gosu
 
-require 'helper'
-
 class Square < GameObject
 	attr_reader :image, :rect
 
@@ -16,16 +14,12 @@ class Square < GameObject
 
 		str = "square-"
 		case type
-			when :ma
-				str += ""
 			when :state
 				str += "select-"
 			else
 				str += ""
 		end
 		case color
-			when :green
-				str += "green"
 			when :red
 				str += "red"
 			when :orange

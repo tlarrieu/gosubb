@@ -11,7 +11,7 @@ class Measures
 		y = coords[1] * (Pitch::SQUARE_H + Pitch::SPACE_Y) + Pitch::MARGIN_TOP + Pitch::SQUARE_H / 2
 		[x, y]
 	end
-
+	
 	def self.dist a, b, type = :infinity
 		if a.is_a?(Player) and b.is_a?(Player) then
 			return self.dist a.pos, b.pos, type

@@ -3,14 +3,9 @@ require 'rubygems'
 require 'chingu'
 include Gosu
 include Chingu
-require 'singleton'
 
-require "player"
+$LOAD_PATH.unshift File.dirname(__FILE__)
 require "pitch"
-require "helper"
-require "ball"
-require "floating_text"
-require "game_menu.rb"
 
 class Game < Window
 
