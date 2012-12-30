@@ -5,6 +5,7 @@ include Gosu
 require "player"
 require "ball"
 require "game_menu"
+require "hud"
 
 class Pitch < GameState
 
@@ -40,6 +41,9 @@ class Pitch < GameState
 		@selected      = nil
 		@last_selected = nil
 		@ma_squares    = []
+
+		@hud = HUD.new :x => 0, :y => 784
+
 		randomize
 	end
 
@@ -75,7 +79,7 @@ class Pitch < GameState
 		unless turnover?
 			lock
 			new_turn!
-			@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => @background.height / 2.0, :timer => 3000, :color => 0xFFFF0000, :size => 40
+			@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => $window.height - 100, :timer => 3000, :color => 0xFFFF0000, :size => 40
 			@text.after(2200) { unlock }
 		end
 	end
@@ -96,12 +100,21 @@ class Pitch < GameState
 	def draw
 		@background.draw 0,0,0
 		@ma_squares.each { |s| s.draw }
+		@hud.draw
 		super
 	end
 
 	def update
 		super
 		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
+		found = false
+		@players.each do |p|
+			if p.collision_at? $window.mouse_x, $window.mouse_y
+				@hud.show p
+				found = true
+			end
+		end
+		@hud.clear unless found
 	end
 
 	def select

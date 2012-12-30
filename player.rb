@@ -1,19 +1,20 @@
 require 'chingu'
 include Chingu
 include Gosu
-
+	
 require 'helper'
 require 'square'
 require 'dice'
 require 'floating_text'
 
 class Player < GameObject
-	attr_reader :team, :cur_ma
+	traits :bounding_circle
+	attr_reader :team, :cur_ma, :stats
 
-	@@str = 5
-	@@agi = 3
-	@@ma  = 5
-	@@arm = 5
+	@@str = 3
+	@@agi = 2
+	@@ma  = 4
+	@@arm = 4
 
 	def initialize options = {}
 		super
@@ -24,8 +25,10 @@ class Player < GameObject
 		@target_x  = @x
 		@target_y  = @y
 		@velocity  = 0.23
-		
-		@stats     = {:str => @@str, :agi => @@agi, :ma => @@ma, :arm => @@arm}
+
+		@factor_x, @factor_y = 1.1, 1.1
+
+		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
 		@has_ball  = options[:has_ball] or false
 		
 		new_turn!

@@ -12,7 +12,7 @@ class Game < Window
 	attr_accessor :selected
 
 	def initialize
-		super 1384, 784, true
+		super 1384, 984, true
 		self.cursor  = true
 		self.factor  = 1
 
