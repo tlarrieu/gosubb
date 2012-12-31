@@ -9,7 +9,7 @@ class Ball < GameObject
 	#include Singleton
 
 	def initialize options = {}
-		super :x => 0, :y => 0, :image => Image["ball.png"], :zorder => 1000
+		super :x => 0, :y => 0, :image => Image["ball.gif"], :zorder => 1000
 		@pitch    = options[:pitch] or raise "Unable to fetch pitch for #{self}"
 		@velocity = 0.4
 

@@ -9,7 +9,7 @@ require 'floating_text'
 
 class Player < GameObject
 	traits :bounding_circle
-	attr_reader :team, :cur_ma, :stats
+	attr_reader :team, :cur_ma, :stats, :race, :role
 
 	@@str = 3
 	@@agi = 2
@@ -21,12 +21,14 @@ class Player < GameObject
 		@team      = options[:team]  or raise "Missing team number for #{self}"
 		@pitch     = options[:pitch] or raise "Unable to fetch pitch for #{self}"
 		@ball      = options[:ball]  or raise "Unable to find ball for #{self}"
+		@race      = options[:race] || "human"
+		@role      = options[:role] || "blitzer"
+		side       = @team == 0 ? "A" : "B"
+		@image     = Image["#{race}/#{role}#{side}.gif"]
 		@x, @y     = Measures.to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x  = @x
 		@target_y  = @y
 		@velocity  = 0.23
-
-		@factor_x, @factor_y = 1.1, 1.1
 
 		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
 		@has_ball  = options[:has_ball] or false
@@ -57,7 +59,7 @@ class Player < GameObject
 		if @team == @pitch.active_team
 			if can_move?
 				if @cur_ma == @stats[:ma]
-					@square = Square.new :x => @x, :y => @y, :type => :state, :color => :green
+					#@square = Square.new :x => @x, :y => @y, :type => :state, :color => :green
 				else
 					@square = Square.new :x => @x, :y => @y, :type => :state, :color => :orange
 				end
@@ -268,19 +270,5 @@ class Player < GameObject
 
 	def screen_pos
 		[@x,@y]
-	end
-end
-
-class AmazonA < Player
-	def initialize options = {}
-		options = { :image => Image["amazon/amblitzer1an.gif"], :team => 0 }.merge(options)
-		super options
-	end
-end
-
-class AmazonB < Player
-	def initialize options = {}
-		options = { :image => Image["amazon/amblitzer1ban.gif"], :team => 1 }.merge(options)
-		super options
 	end
 end

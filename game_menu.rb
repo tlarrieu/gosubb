@@ -166,14 +166,14 @@ class Menu < BasicGameObject
 
 	def draw
 		parent.fill_rect(
-		                 [
-		                 	@x - 20 - @bg_padding_l - @width / 2.0, 
-		                 	@y - @bg_padding_t - @height / 2.0, 
-		                 	@width + 40 + @bg_padding_l + @bg_padding_r, 
-		                 	@height + @bg_padding_t + @spacing + @bg_padding_b
-		                 ], 
-		                 @bg_color, 
-		                 @zorder) rescue nil
+						[
+							@x - 20 - @bg_padding_l - @width / 2.0, 
+							@y - @bg_padding_t - @height / 2.0, 
+							@width + 40 + @bg_padding_l + @bg_padding_r, 
+							@height + @bg_padding_t + @spacing + @bg_padding_b
+						], 
+						@bg_color, 
+						@zorder) rescue nil
 		@items.each { |item| item.draw }
 	end
 

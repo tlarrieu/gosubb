@@ -13,8 +13,8 @@ class Pitch < GameState
 
 	WIDTH       = 26
 	HEIGHT      = 15
-	SQUARE_W    = 50
-	SQUARE_H    = 49
+	SQUARE_W    = 49.7	
+	SQUARE_H    = 48.8
 	SPACE_X     = 3
 	SPACE_Y     = 3
 	MARGIN_LEFT = 8
@@ -26,7 +26,7 @@ class Pitch < GameState
 		@sound       = Sample["turnover.ogg"]
 		@active_team = 0
 
-		@fps = FPSText.create "fps", :x => 10, :y => 10
+		@fps = FPSText.create "fps", :x => 15, :y => 10
 		
 		self.input   = { :mouse_right => :action, :mouse_left => :select, :return => :turnover!, :escape => :show_menu, :e => :edit }
 
@@ -124,6 +124,7 @@ class Pitch < GameState
 			@selected      = self[pos]
 			@action_coords = nil
 			show_movement
+			@hud.stick @selected
 		end
 	end
 
@@ -191,27 +192,52 @@ class Pitch < GameState
 	end
 
 	def randomize
+		roles = { :human => ["lineman", "blitzer", "catcher", "thrower"], :orc => ["lineman", "blitzer", "thrower"] }
+		races = [:human, :orc]
+
+		race = races.sample
 		1.upto(11) do
+			role = roles[race].sample
 			loop do
 				x   = rand(Pitch::WIDTH / 2)
 				y   = rand(Pitch::HEIGHT)
 				pos = [x, y]
 				if self[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					self << AmazonA.create( :team => 0, :x => x, :y => y, :has_ball => has_ball, :pitch => self, :ball => @ball )
+					self << Player.create( 
+					                      :team => 0, 
+					                      :x => x, 
+					                      :y => y, 
+					                      :has_ball => has_ball, 
+					                      :pitch => self, 
+					                      :ball => @ball, 
+					                      :race => race, 
+					                      :role => role 
+					                      )
 					break
 				end
 			end
 		end
 
+		race = races.sample
 		1.upto(11) do
+			role = roles[race].sample
 			loop do
 				x   = rand(Pitch::WIDTH / 2) + Pitch::WIDTH / 2
 				y   = rand(Pitch::HEIGHT)
 				pos = [x, y]
 				if self[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					self << AmazonB.create( :team => 1, :x => x, :y => y, :has_ball => has_ball, :pitch => self, :ball => @ball )
+					self << Player.create( 
+					                      :team => 1, 
+					                      :x => x, 
+					                      :y => y, 
+					                      :has_ball => has_ball, 
+					                      :pitch => self, 
+					                      :ball => @ball, 
+					                      :race => race, 
+					                      :role => role 
+					                      )
 					break
 				end
 			end
