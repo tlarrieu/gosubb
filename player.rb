@@ -30,9 +30,10 @@ class Player < GameObject
 		@target_y  = @y
 		@velocity  = 0.23
 
+		@selected  = false
+
 		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
 		@has_ball  = options[:has_ball] or false
-		
 		new_turn!
 	end
 
@@ -44,7 +45,6 @@ class Player < GameObject
 		@can_move  = true
 		@has_moved = false
 		@cur_ma    = @stats[:ma]
-		@square    = nil
 		@cur_node  = 0
 		@path      = nil
 		@blitz     = false
@@ -56,24 +56,26 @@ class Player < GameObject
 	# -------------------------------
 	
 	def draw
-		if @team == @pitch.active_team
-			if can_move?
-				if @cur_ma == @stats[:ma]
-					#@square = Square.new :x => @x, :y => @y, :type => :state, :color => :green
-				else
-					@square = Square.new :x => @x, :y => @y, :type => :state, :color => :orange
-				end
-			else
-				@square = Square.new :x => @x, :y => @y, :type => :state, :color => :red
-			end
-			@square.draw unless @square.nil?
-		end
+		@square.draw if @square
 		super
 	end
 
 	def update
-		ms = $window.milliseconds_since_last_tick rescue nil
+		params = {:x => @x, :y => @y, :type => :state, :color => :yellow}
+
+		if @selected
+			@square = Square.new  params.merge(:color => :yellow)
+		elsif @team == @pitch.active_team
+			if can_move?
+				@square = Square.new  params.merge(:color => :green)
+			else
+				@square = Square.new  params.merge(:color => :red)
+			end
+		end
+
 		unless @path.nil?
+			ms = $window.milliseconds_since_last_tick rescue nil
+
 			t_pos = Measures.to_screen_coords @path[@cur_node]
 			c_pos = [@x, @y]
 
@@ -119,9 +121,9 @@ class Player < GameObject
 	# -------------------------------
 	def select
 		if Measures.to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
-			@square = Square.new :x => @x, :y => @y, :type => :state
+			@selected = true
 		else
-			@square = nil
+			@selected = false
 		end
 	end
 

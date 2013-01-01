@@ -29,7 +29,7 @@ class Team
 	end
 
 	def each
-		@players.each { |p| yield(p) }
+		@players.each { |p| yield p }
 	end
 
 	def new_turn!

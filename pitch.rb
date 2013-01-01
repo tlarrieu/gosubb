@@ -6,10 +6,12 @@ require "player"
 require "ball"
 require "game_menu"
 require "hud"
+require "team"
 
 class Pitch < GameState
 
 	attr_accessor :active_team, :teams
+	attr_reader   :selected
 
 	WIDTH       = 26
 	HEIGHT      = 15
@@ -42,7 +44,13 @@ class Pitch < GameState
 		@last_selected = nil
 		@ma_squares    = []
 
-		@hud = HUD.new :x => 0, :y => 784
+		@teams = []
+		@teams << Team.new( :name => "TROLOLOL", :active => true )
+		@teams << Team.new( :name => "OTAILLO" )
+
+		@teams[@active_team].new_turn!
+
+		@hud = HUD.create :teams => @teams
 
 		randomize
 	end
@@ -70,8 +78,9 @@ class Pitch < GameState
 		@turnover = false
 		@ma_squares.each { |s| s.destroy! }
 		@ma_squares.clear
+		@teams[@active_team].active = false
 		@active_team = (@active_team + 1) % 2
-		@players.each { |p| p.new_turn! if p.team == @active_team }
+		@teams[@active_team].new_turn!
 	end
 
 
@@ -89,31 +98,33 @@ class Pitch < GameState
 	end
 
 	def [] pos
-		@players.each { |p| return p if p.pos == pos}
+		@teams.each { |t| return t[pos] unless t[pos].nil?}
 		nil
 	end
 
-	def << player
-		@players << player
-	end
-
 	def draw
+		super
 		@background.draw 0,0,0
 		@ma_squares.each { |s| s.draw }
 		@hud.draw
-		super
 	end
 
 	def update
 		super
 		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
 		found = false
-		@players.each do |p|
-			if p.collision_at? $window.mouse_x, $window.mouse_y
-				@hud.show p
-				found = true
+
+		@teams[@active_team].update
+
+		@teams.each do |t|
+			t.each do |p|
+				if p.collision_at? $window.mouse_x, $window.mouse_y
+					@hud.show p
+					found = true
+				end
 			end
 		end
+
 		@hud.clear unless found
 	end
 
@@ -204,7 +215,7 @@ class Pitch < GameState
 				pos = [x, y]
 				if self[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					self << Player.create( 
+					@teams[0] << Player.create( 
 					                      :team => 0, 
 					                      :x => x, 
 					                      :y => y, 
@@ -228,7 +239,7 @@ class Pitch < GameState
 				pos = [x, y]
 				if self[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					self << Player.create( 
+					@teams[1] << Player.create( 
 					                      :team => 1, 
 					                      :x => x, 
 					                      :y => y, 

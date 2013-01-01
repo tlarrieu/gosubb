@@ -9,26 +9,30 @@ class Square < GameObject
 	@@color = :green
 
 	def initialize options={}
-		type = options[:type] or @@type
-		color = options[:color] or @@color
+		@type = options.delete(:type) || @@type
+		@color = options.delete(:color) || @@color
 
-		str = "square-"
-		case type
+
+		str = ""
+		case @type
 			when :state
-				str += "select-"
+				str += "selected-"
 			else
-				str += ""
+				str += "square-"
 		end
-		case color
+		case @color
 			when :red
 				str += "red"
 			when :orange
 				str += "orange"
+			when :yellow
+				str += "yellow"
 			else
 				str += "green"
 		end
 		str += ".png"
 
-		super(:image => Image[str], :x => options[:x], :y => options[:y]) rescue nil
+		super
+		@image = Image[str]
 	end
 end

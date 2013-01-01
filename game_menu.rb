@@ -16,9 +16,11 @@ class GameMenu < GameState
 		                    :bg_color => 0x33FFFFFF,
 		                    :bg_padding_r => 55,
 		                    :bg_padding_l => 55,
-		                    :bg_padding_t => 5,
+		                    :bg_padding_t => 20,
 		                    :bg_padding_b => 5,
-		                    :anchor => :center_center
+		                    :anchor => :center_center,
+		                    :font => "media/fonts/Colleged.ttf",
+		                    :font_size => 40
 
 		@bg = GameObject.new :image => "pause_bg.jpg", :x => $window.width / 2.0, :y => $window.height / 2.0, :scale => 0.8, :zorder => 0
 		self.input = { :escape => :close }
@@ -71,7 +73,8 @@ class Menu < BasicGameObject
 		@bg_padding_r   = options.delete(:bg_padding_r) || 0
 		@bg_padding_t   = options.delete(:bg_padding_t) || 0
 		@bg_padding_b   = options.delete(:bg_padding_b) || 0
-		
+
+
 		@zorder         = options.delete(:zorder) || 0
 
 		@width  = 0
@@ -79,7 +82,7 @@ class Menu < BasicGameObject
 
 		menu_items.each do |key, value|
 			item = if key.is_a? String
-				opt = options.dup
+				opt = {:size => @font_size}.merge(options.dup)
 				opt[:color] = @unselect_color
 				Text.new key, opt
 			elsif key.is_a? Image

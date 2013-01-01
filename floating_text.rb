@@ -6,7 +6,7 @@ class FloatingText < Chingu::Text
 	traits :timer
 
 	@@size = 25
-	@@font = "media/fonts/letratista_rg.ttf"
+	@@font = "media/fonts/averia_rg.ttf"
 
 	def initialize text, options = {}
 		super text, options
