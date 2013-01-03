@@ -1,20 +1,21 @@
-class Measures
+module Helpers
 
-	def self.to_pitch_coords coords
+module Measures
+	def to_pitch_coords coords
 		x = (coords[0] - Pitch::MARGIN_LEFT) / (Pitch::SQUARE_W + Pitch::SPACE_X)
 		y = (coords[1] - Pitch::MARGIN_TOP) / (Pitch::SQUARE_H + Pitch::SPACE_Y)
 		[x.floor, y.floor]
 	end
 
-	def self.to_screen_coords coords
+	def to_screen_coords coords
 		x = coords[0] * (Pitch::SQUARE_W + Pitch::SPACE_X) + Pitch::MARGIN_LEFT + Pitch::SQUARE_W / 2
 		y = coords[1] * (Pitch::SQUARE_H + Pitch::SPACE_Y) + Pitch::MARGIN_TOP + Pitch::SQUARE_H / 2
 		[x, y]
 	end
-	
-	def self.dist a, b, type = :infinity
+
+	def dist a, b, type = :infinity
 		if a.is_a?(Player) and b.is_a?(Player) then
-			return self.dist a.pos, b.pos, type
+			return dist a.pos, b.pos, type
 		else
 			case type
 			when :infinity
@@ -30,7 +31,7 @@ class Measures
 	end
 
 	# TODO: handle non connexity (infinite loop involved there :( )
-	def self.a_star pitch, start, goal
+	def a_star pitch, start, goal
 		# The set of nodes already evaluated.
 		closedset = []
 		# The set of tentative nodes to be evaluated.
@@ -43,7 +44,7 @@ class Measures
 		# Distance from start along optimal path.
 		g_score, h_score, f_score = { }, { }, { }
 		g_score[start]              = 0
-		h_score[start]              = Measures.dist start, goal, :manhattan
+		h_score[start]              = dist start, goal, :manhattan
 		# Estimated total distance from start to goal through y.
 		f_score[start]              = h_score[start]
 
@@ -69,7 +70,7 @@ class Measures
 							next if closedset.include? y # If already in closedset, we skip it
 
 							better = false
-							h      = Measures.dist x, y, :manhattan
+							h      = dist x, y, :manhattan
 							g      = g_score[x] + h
 
 							if not openset.include? y then
@@ -87,7 +88,7 @@ class Measures
 							if better then
 								came_from[y] = x
 								g_score[y]   = g
-								h_score[y]   = Measures.dist y, goal, :manhattan #heuristic estimate of distance (y, coords)
+								h_score[y]   = dist y, goal, :manhattan #heuristic estimate of distance (y, coords)
 								f_score[y]   = g_score[y] + h_score[y]
 							end
 						end
@@ -106,4 +107,21 @@ class Measures
 
 		return path.reverse
 	end
+end
+
+module Images
+	def dice_image symb
+		valid_symbols = [
+							:attacker_down,
+							:both_down,
+							:pushed,
+							:defender_stumble,
+							:defender_down
+						]
+
+		raise "Invalid argument '#{symb}' for method dice_image" unless valid_symbols.include? symb
+		"dices/#{symb}.gif"
+	end
+end
+
 end

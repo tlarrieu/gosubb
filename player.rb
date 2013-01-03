@@ -1,13 +1,14 @@
 require 'chingu'
 include Chingu
 include Gosu
-	
-require 'helper'
+
+require 'helpers'
 require 'square'
 require 'dice'
 require 'floating_text'
 
 class Player < GameObject
+	include Helpers::Measures
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :race, :role
 
@@ -24,8 +25,8 @@ class Player < GameObject
 		@race      = options[:race] || "human"
 		@role      = options[:role] || "blitzer"
 		side       = @team == 0 ? "A" : "B"
-		@image     = Image["#{race}/#{role}#{side}.gif"]
-		@x, @y     = Measures.to_screen_coords [options[:x], options[:y]] rescue nil
+		@image     = Image["teams/#{race}/#{role}#{side}.gif"]
+		@x, @y     = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x  = @x
 		@target_y  = @y
 		@velocity  = 0.23
@@ -33,6 +34,7 @@ class Player < GameObject
 		@selected  = false
 
 		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
+		@abilities = []
 		@has_ball  = options[:has_ball] or false
 		new_turn!
 	end
@@ -54,7 +56,7 @@ class Player < GameObject
 	# -------------------------------
 	# ----------- Graphic -----------
 	# -------------------------------
-	
+
 	def draw
 		@square.draw if @square
 		super
@@ -71,12 +73,14 @@ class Player < GameObject
 			else
 				@square = Square.new  params.merge(:color => :red)
 			end
+		else
+			@square = nil
 		end
 
 		unless @path.nil?
 			ms = $window.milliseconds_since_last_tick rescue nil
 
-			t_pos = Measures.to_screen_coords @path[@cur_node]
+			t_pos = to_screen_coords @path[@cur_node]
 			c_pos = [@x, @y]
 
 			vx, vy = 0, 0
@@ -108,7 +112,7 @@ class Player < GameObject
 			@ball.set_pos! @x, @y, false if @has_ball
 
 			if @cur_node == @path.size
-				@path = nil 
+				@path = nil
 				@pitch.unlock
 			end
 
@@ -120,11 +124,15 @@ class Player < GameObject
 	# ----------- Actions -----------
 	# -------------------------------
 	def select
-		if Measures.to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
+		if to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
 			@selected = true
 		else
 			@selected = false
 		end
+	end
+
+	def unselect
+		@selected = false
 	end
 
 	def move_to! x, y
@@ -132,9 +140,9 @@ class Player < GameObject
 		coords = [x, y]
 
 		# Getting @path through A*
-		path = Measures.a_star @pitch, pos, coords
+		path = a_star @pitch, pos, coords
 		return false unless path.include? coords and path.length <= @cur_ma
-		@target_x, @target_y = Measures.to_screen_coords [x, y]
+		@target_x, @target_y = to_screen_coords [x, y]
 		@cur_node  = 0
 		@path      = path
 		@has_moved = true
@@ -172,10 +180,10 @@ class Player < GameObject
 				event! :fumble
 			else
 				coords = @ball.scatter! 3, target_player.pos
-				if @pitch[coords].nil?
-					event! :fail
+				if @pitch[coords] == target_player
+					event! :pass
 				else
-					event! :pass if @pitch[coords] == target_player
+					event! :fail
 				end
 			end
 			return true
@@ -183,9 +191,40 @@ class Player < GameObject
 		return false
 	end
 
+	def block target_player
+		if can_block? target_player
+			parent.push_game_state DiceMenu.new(:dices => 2, :attacker => self, :defender => target_player)
+			return true
+		end
+		return false
+	end
+
+	def down
+		end_turn if @team == @pitch.active_team
+	end
+
+	def push
+	end
+
+	def stumble
+		if @abilities.include? :dodge
+			push
+		else
+			down
+		end
+	end
+
 	# FIXME : the following condition is not enough, we are missing some cases
 	def can_pass_to? target_player
-		@can_move and @has_ball and target_player != self  and target_player.team == @team
+		@can_move and @has_ball and target_player and target_player != self  and target_player.team == @team
+	end
+
+	def close_to? player
+		return dist(self, player, :infinity) == 1
+	end
+
+	def can_block? target_player
+		(close_to?(target_player) and (@can_move and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team
 	end
 
 	def catch! modifiers=[]
@@ -218,18 +257,23 @@ class Player < GameObject
 			color = 0xFFFF0000
 		when :catch
 			msg = "Catch !"
+		when :block
+			msg = "Block !"
+		when :dodge
+			msg = "Dodge !"
 		end
+		@text.destroy! if @text # We do not want to have many text boxes displayed at the same time
 		@text = FloatingText.create(msg, :x => @x, :y => @y - 1.5 * height, :timer => 2000, :color => color)
-		end_turn unless success
+		end_turn unless success if @pitch.active_team == @team
 	end
 
 	def end_turn
 		if @pitch.active_team == @team
 			@pitch.turnover!
-			@can_move = false
+			cant_move!
 		end
 	end
-	
+
 	# -------------------------------
 	# ------------ State ------------
 	# -------------------------------
@@ -243,6 +287,7 @@ class Player < GameObject
 
 	def cant_move!
 		@can_move = false
+		@cur_ma   = 0
 	end
 
 	def has_moved?
@@ -267,7 +312,7 @@ class Player < GameObject
 	end
 
 	def pos
-		Measures.to_pitch_coords [@x, @y]
+		to_pitch_coords [@x, @y]
 	end
 
 	def screen_pos

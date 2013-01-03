@@ -7,15 +7,14 @@ class Dice
 		when :block
 			case _rand
 				when 1
-					return :self_down
+					return :attacker_down
 				when 2
 					return :both_down
-				when 3 | 4
-					return :pushback
 				when 5
-					return :shove
+					return :defender_stumble
 				when 6
-					return :target_down
+					return :defender_down
+				else return :pushed
 			end
 		when :injury_effect
 			_rand2 = 1 + rand(5)

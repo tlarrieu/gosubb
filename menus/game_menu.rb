@@ -2,13 +2,15 @@ require 'chingu'
 include Chingu
 include Gosu
 
+module Menus
+
 class GameMenu < GameState
 	def setup
 		@text = ""
 		items = {"Resume" => :close, "Exit" => :exit, "Save" => :save, "Load" => :load}.sort_by { |key,value| key }
-		@menu = Menu.create :menu_items => items, 
-		                    :x => $window.width / 2.0, 
-		                    :y => $window.height / 2.0, 
+		@menu = Menu.create :menu_items => items,
+		                    :x => $window.width / 2.0,
+		                    :y => $window.height / 2.0,
 		                    :zorder => 2,
 		                    :select_color => 0xFF0056D6,
 		                    :unselect_color => 0xFF000000,
@@ -42,14 +44,13 @@ class GameMenu < GameState
 	end
 
 	def save
-		
+
 	end
 
 	def load
-		
+
 	end
 end
-
 
 class Menu < BasicGameObject
 	include Chingu::Helpers::InputClient, Chingu::Helpers::RotationCenter
@@ -121,7 +122,7 @@ class Menu < BasicGameObject
 		@selected = options[:selected] || 0
 		step(0)
 
-		self.input = {:up => lambda{step(-1)}, :down => lambda{step(1)}, [:return, :space, :mouse_left] => :select}
+		self.input = {[:up, :s] => lambda{step(-1)}, [:down, :t] => lambda{step(1)}, [:return, :space, :mouse_left] => :select}
 	end
 
 	#
@@ -170,12 +171,12 @@ class Menu < BasicGameObject
 	def draw
 		parent.fill_rect(
 						[
-							@x - 20 - @bg_padding_l - @width / 2.0, 
-							@y - @bg_padding_t - @height / 2.0, 
-							@width + 40 + @bg_padding_l + @bg_padding_r, 
+							@x - 20 - @bg_padding_l - @width / 2.0,
+							@y - @bg_padding_t - @height / 2.0,
+							@width + 40 + @bg_padding_l + @bg_padding_r,
 							@height + @bg_padding_t + @spacing + @bg_padding_b
-						], 
-						@bg_color, 
+						],
+						@bg_color,
 						@zorder) rescue nil
 		@items.each { |item| item.draw }
 	end
@@ -198,4 +199,6 @@ class Menu < BasicGameObject
 			# TODO possibly raise an error? This ought to be handled when the input is specified in the first place.
 		end
 	end
+end
+
 end

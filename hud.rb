@@ -77,6 +77,7 @@ class TeamBlock < GameObject
 		time = Time.at(@team.time_left / 1000)
 		nb_min = time.min
 		nb_sec = time.sec
+		nb_sec = "0#{nb_sec}" if nb_sec < 10
 		if @team.active
 			@time.text = "#{nb_min}:#{nb_sec}"
 		else
@@ -86,7 +87,6 @@ class TeamBlock < GameObject
 		@elapsed_time += $window.milliseconds_since_last_tick
 	end
 end
-
 
 class PlayerBlock < GameObject
 

@@ -9,7 +9,7 @@ class FloatingText < Chingu::Text
 	@@font = "media/fonts/averia_rg.ttf"
 
 	def initialize text, options = {}
-		super text, options
+		super text, {:zorder => 1000}.merge(options)
 
 		options = {:timer => 1000}.merge(options)
 		@x -= width / 2.0

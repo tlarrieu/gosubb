@@ -4,7 +4,9 @@ require 'chingu'
 include Gosu
 include Chingu
 
-$LOAD_PATH.unshift File.dirname(__FILE__)
+local = File.expand_path File.dirname(__FILE__)
+$LOAD_PATH.unshift local unless $LOAD_PATH.include? local
+
 require "pitch"
 
 class Game < Window
@@ -16,7 +18,7 @@ class Game < Window
 		self.cursor  = true
 		self.factor  = 1
 
-		push_game_state Pitch.new, :setup => true
+		push_game_state Pitch.new
 	end
 
 	def update
