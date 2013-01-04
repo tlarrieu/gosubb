@@ -153,17 +153,21 @@ class Player < GameObject
 
 	def can_move_to? x, y
 		coords = [x, y]
-		return false unless coords.size == 2
+		# Checking that [x, y] is in movement allowance range
+		return false if dist(pos, [x,y], :infinity) > @stats[:ma]
 		# Checking that coordinates are within pitch range
 		return false unless (0..25).include? coords[0] and (0..14).include? coords[1]
 		# Checking if player can move
 		return false unless can_move? and @team == @pitch.active_team
 		# Checking that target location is empty
 		return false unless @pitch[coords].nil?
-		# Checking if a path exists to
+		# Checking if a path exists to x, y
 		return false if stuck?
 
 		return true
+	end
+
+	def can_blitz?
 	end
 
 	def pass target_player
@@ -193,7 +197,7 @@ class Player < GameObject
 
 	def block target_player
 		if can_block? target_player
-			parent.push_game_state DiceMenu.new(:dices => 2, :attacker => self, :defender => target_player)
+			parent.push_game_state DiceMenu.new(:attacker => self, :defender => target_player)
 			return true
 		end
 		return false
@@ -212,19 +216,6 @@ class Player < GameObject
 		else
 			down
 		end
-	end
-
-	# FIXME : the following condition is not enough, we are missing some cases
-	def can_pass_to? target_player
-		@can_move and @has_ball and target_player and target_player != self  and target_player.team == @team
-	end
-
-	def close_to? player
-		return dist(self, player, :infinity) == 1
-	end
-
-	def can_block? target_player
-		(close_to?(target_player) and (@can_move and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team
 	end
 
 	def catch! modifiers=[]
@@ -277,6 +268,13 @@ class Player < GameObject
 	# -------------------------------
 	# ------------ State ------------
 	# -------------------------------
+	def [] symb
+		raise ArgumentError, "#{symb}" unless symb.is_a? Symbol
+		raise ArgumentError, "#{symb}" unless @stats.keys.include? symb
+
+		stats[symb]
+	end
+
 	def moving?
 		return [@target_x, @target_y] == [@x, @y]
 	end
@@ -309,6 +307,23 @@ class Player < GameObject
 		end
 
 		true
+	end
+
+	# FIXME : the following condition is not enough, we are missing some cases
+	def can_pass_to? target_player
+		@can_move and @has_ball and target_player and target_player != self  and target_player.team == @team
+	end
+
+	def close_to? player
+		return dist(self, player, :infinity) == 1
+	end
+
+	def can_block? target_player
+		((@can_move and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and close_to?(target_player)
+	end
+
+	def has_ball?
+		@has_ball
 	end
 
 	def pos

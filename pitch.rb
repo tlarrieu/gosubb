@@ -56,6 +56,10 @@ class Pitch < GameState
 		randomize
 	end
 
+	def finalize
+		$window.change_cursor :normal
+	end
+
 	def show_menu
 		push_game_state GameMenu.new
 	end
@@ -89,10 +93,8 @@ class Pitch < GameState
 
 
 	def turnover!
-		unless turnover?
-			new_turn!
-			@text = FloatingText.create "Turnover !", :x => @background.width / 2.0, :y => $window.height - 100, :timer => 3000, :color => 0xFFFF0000, :size => 40
-		end
+		@turnover = true
+
 	end
 
 	def turnover?
@@ -113,11 +115,14 @@ class Pitch < GameState
 
 	def update
 		super
+		# Movement allowance
 		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
-		found = false
 
+		# Players update
 		@teams[@active_team].update
 
+		# HUD update
+		found = false
 		@teams.each do |t|
 			t.each do |p|
 				if p.collision_at? $window.mouse_x, $window.mouse_y
@@ -126,8 +131,65 @@ class Pitch < GameState
 				end
 			end
 		end
-
 		@hud.clear unless found
+
+		# Cursor selection
+		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		if @selected and @selected.team == @active_team
+			if @selected == self[cursor_pos]
+				$window.change_cursor :blitz
+			elsif self[cursor_pos]
+				if self[cursor_pos].team == @selected.team
+					if @selected.has_ball?
+						if @selected.close_to? self[cursor_pos]
+							$window.change_cursor :handoff
+						elsif @selected.can_pass_to? self[cursor_pos]
+							$window.change_cursor :throw
+						end
+					else
+						$window.change_cursor :normal
+					end
+				else
+					diff = (@selected[:str] - self[cursor_pos][:str]).abs
+					if @selected[:str] > self[cursor_pos][:str]
+						if diff >= 2 * self[cursor_pos][:str]
+							$window.change_cursor :d_3
+						else
+							$window.change_cursor :d_2
+						end
+					elsif @selected[:str] < self[cursor_pos][:str]
+						if diff >= 3 * @selected[:str]
+							$window.change_cursor :d_3_red
+						elsif diff >= 2 * @selected[:str]
+							$window.change_cursor :d_2_red
+						else
+							$window.change_cursor :d_1_red
+						end
+					else
+						$window.change_cursor :d_1
+					end
+				end
+			elsif @ball.pos == cursor_pos
+				$window.change_cursor :take
+			elsif @selected.can_move_to? cursor_pos[0], cursor_pos[1]
+				$window.change_cursor :move
+			else
+				$window.change_cursor :normal
+			end
+		else
+			$window.change_cursor :normal
+		end
+
+		# Turnover
+		if turnover? and @barrier == 0
+			new_turn!
+			@text = FloatingText.create "Turnover !",
+			                            :x => @background.width / 2.0,
+			                            :y => $window.height - 100,
+			                            :timer => 3000,
+			                            :color => 0xFFFF0000,
+			                            :size => 40
+		end
 	end
 
 	def select
@@ -169,7 +231,11 @@ class Pitch < GameState
 
 		unless @selected.nil? or not @selected.moving?# or not @selected.can_move?
 			if @selected.team == @active_team
-				w, color = @selected.cur_ma, :green
+				if @selected.can_move?
+					w, color = @selected.cur_ma, :green
+				else
+					w, color = 0, :green
+				end
 			else
 				w, color = 1, :red
 			end
@@ -204,6 +270,12 @@ class Pitch < GameState
 	def randomize
 		roles = { :human => ["lineman", "blitzer", "catcher", "thrower"], :orc => ["lineman", "blitzer", "thrower"] }
 		races = [:human, :orc]
+
+		class << Array
+			def sample
+				return self[rand(count)]
+			end
+		end
 
 		race = races.sample
 		1.upto(11) do

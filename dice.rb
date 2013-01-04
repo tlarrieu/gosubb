@@ -1,10 +1,10 @@
 class Dice
-	# TODO: we shall include some sound playing around there
 	def self.roll type=:classic
 		Sample["dice.ogg"].play
 		_rand = 1 + rand(5)
 		case type
 		when :block
+
 			case _rand
 				when 1
 					return :attacker_down
@@ -16,6 +16,7 @@ class Dice
 					return :defender_down
 				else return :pushed
 			end
+
 		when :injury_effect
 			_rand2 = 1 + rand(5)
 			_sum = _rand + _rand2
@@ -34,7 +35,6 @@ class Dice
 
 	# TODO: ... and around there too
 	def self.roll_agility agi_score, modifs=[]
-		Sample["dice.ogg"].play
 		score = roll :classic
 		res = :success
 		if score == 6

@@ -6,9 +6,9 @@ class Team
 	attr_accessor :active, :time_left
 
 	def initialize options = {}
-		@name = options[:name] || ""
-		@ai   = options[:ai]   || false
-		@image = options[:image]
+		@name   = options[:name]   || ""
+		@ai     = options[:ai]     || false
+		@image  = options[:image]
 
 		@active = options[:active] || false
 
@@ -35,8 +35,17 @@ class Team
 	def new_turn!
 		@players.each { |p| p.new_turn! }
 		@time_left = 240_000
-		@active = true
-		@turn += 1
+		@active    = true
+		@turn      += 1
+		@blitz     = false
+	end
+
+	def blitz!
+		@blitz = true
+	end
+
+	def blitz?
+		@blitz
 	end
 
 	def update
@@ -48,6 +57,7 @@ class Team
 	def new_period!
 		@points = 0
 		@turn   = 0
+		@blitz  = false
 	end
 
 	def inc symb

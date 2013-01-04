@@ -13,16 +13,26 @@ class DiceMenu < GameState
 		self.input = { :mouse_left => :click }
 		@color = 0xAA000000
 
-		@nb_dices = options[:dices] || 1
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
+		diff = (@attacker.stats[:str] - @defender.stats[:str]).abs
+		lowest = [@attacker.stats[:str], @defender.stats[:str]].min
+		nb_dices = if diff >= 3 * lowest
+			4
+		elsif diff >= 2 * lowest
+			3
+		elsif diff > lowest
+			2
+		else
+			1
+		end
 
-		x = ($window.width - (@nb_dices - 1) * 50) / 2.0
+		x = ($window.width - (nb_dices - 1) * 50) / 2.0
 		y = ($window.height - 37) / 2.0
 
 		@dices = []
-		@nb_dices.times do
+		nb_dices.times do
 			@dices << DiceObject.create( :value => Dice.roll(:block), :x => x, :y => y, :zorder => 1001 )
 			x += 50
 		end
