@@ -163,7 +163,6 @@ class Player < GameObject
 		return false unless @pitch[coords].nil?
 		# Checking if a path exists to x, y
 		return false if stuck?
-
 		return true
 	end
 

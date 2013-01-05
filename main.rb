@@ -17,13 +17,14 @@ class Array
 end
 
 class Game < Window
-
 	attr_accessor :selected
 
 	def initialize
 		super 1384, 984, true
 		self.cursor  = false
 		self.factor  = 1
+
+		change_cursor :normal
 
 		push_game_state Pitch.new
 	end
@@ -43,7 +44,6 @@ class Game < Window
 		@cursor_image = Image["cursors/#{symb}.png"]
 
 	end
-
 end
 
 if __FILE__ == $0

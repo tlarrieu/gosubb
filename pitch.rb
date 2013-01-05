@@ -134,51 +134,51 @@ class Pitch < GameState
 		@hud.clear unless found
 
 		# Cursor selection
-		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		if @selected and @selected.team == @active_team
-			if @selected == self[cursor_pos]
-				$window.change_cursor :blitz
-			elsif self[cursor_pos]
-				if self[cursor_pos].team == @selected.team
-					if @selected.has_ball?
-						if @selected.close_to? self[cursor_pos]
-							$window.change_cursor :handoff
-						elsif @selected.can_pass_to? self[cursor_pos]
-							$window.change_cursor :throw
-						end
-					else
-						$window.change_cursor :normal
-					end
-				else
-					diff = (@selected[:str] - self[cursor_pos][:str]).abs
-					if @selected[:str] > self[cursor_pos][:str]
-						if diff >= 2 * self[cursor_pos][:str]
-							$window.change_cursor :d_3
-						else
-							$window.change_cursor :d_2
-						end
-					elsif @selected[:str] < self[cursor_pos][:str]
-						if diff >= 3 * @selected[:str]
-							$window.change_cursor :d_3_red
-						elsif diff >= 2 * @selected[:str]
-							$window.change_cursor :d_2_red
-						else
-							$window.change_cursor :d_1_red
-						end
-					else
-						$window.change_cursor :d_1
-					end
-				end
-			elsif @ball.pos == cursor_pos
-				$window.change_cursor :take
-			elsif @selected.can_move_to? cursor_pos[0], cursor_pos[1]
-				$window.change_cursor :move
-			else
-				$window.change_cursor :normal
-			end
-		else
-			$window.change_cursor :normal
-		end
+		# cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		# if @selected and @selected.team == @active_team
+		# 	if @selected == self[cursor_pos]
+		# 		$window.change_cursor :blitz
+		# 	elsif self[cursor_pos]
+		# 		if self[cursor_pos].team == @selected.team
+		# 			if @selected.has_ball?
+		# 				if @selected.close_to? self[cursor_pos]
+		# 					$window.change_cursor :handoff
+		# 				elsif @selected.can_pass_to? self[cursor_pos]
+		# 					$window.change_cursor :throw
+		# 				end
+		# 			else
+		# 				$window.change_cursor :normal
+		# 			end
+		# 		else
+		# 			diff = (@selected[:str] - self[cursor_pos][:str]).abs
+		# 			if @selected[:str] > self[cursor_pos][:str]
+		# 				if diff >= 2 * self[cursor_pos][:str]
+		# 					$window.change_cursor :d_3
+		# 				else
+		# 					$window.change_cursor :d_2
+		# 				end
+		# 			elsif @selected[:str] < self[cursor_pos][:str]
+		# 				if diff >= 3 * @selected[:str]
+		# 					$window.change_cursor :d_3_red
+		# 				elsif diff >= 2 * @selected[:str]
+		# 					$window.change_cursor :d_2_red
+		# 				else
+		# 					$window.change_cursor :d_1_red
+		# 				end
+		# 			else
+		# 				$window.change_cursor :d_1
+		# 			end
+		# 		end
+		# 	elsif @ball.pos == cursor_pos
+		# 		$window.change_cursor :take
+		# 	elsif @selected.can_move_to? cursor_pos[0], cursor_pos[1]
+		# 		$window.change_cursor :move
+		# 	else
+		# 		$window.change_cursor :normal
+		# 	end
+		# else
+		# 	$window.change_cursor :normal
+		# end
 
 		# Turnover
 		if turnover? and @barrier == 0
