@@ -2,11 +2,13 @@ require "chingu"
 include Chingu
 include Gosu
 
-require "helpers"
+require "helpers/dices"
+require "helpers/images"
 
 module Menus
 
 class DiceMenu < GameState
+	include Helpers::Dices
 
 	def initialize options = {}
 		super
@@ -33,11 +35,15 @@ class DiceMenu < GameState
 
 		@dices = []
 		nb_dices.times do
-			@dices << DiceObject.create( :value => Dice.roll(:block), :x => x, :y => y, :zorder => 1001 )
+			@dices << DiceObject.create( :value => roll(:block), :x => x, :y => y, :zorder => 201 )
 			x += 50
 		end
 
-		@caption = Text.create "Select a dice", :x => $window.width / 2.0 - 60, :y => $window.height / 2.0 + 30, :zorder => 1001
+		@caption = Text.create "Select a dice", :x => $window.width / 2.0 - 60, :y => $window.height / 2.0 + 30, :zorder => 201
+	end
+
+	def finalize
+		previous_game_state.update
 	end
 
 	def update
@@ -48,7 +54,7 @@ class DiceMenu < GameState
 	def draw
 		super
 		previous_game_state.draw
-		$window.fill_rect([0, 0, $window.width, $window.height], @color, 1000)
+		$window.fill_rect([0, 0, $window.width, $window.height], @color, 200)
 	end
 
 	def click

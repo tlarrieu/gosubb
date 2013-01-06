@@ -7,7 +7,7 @@ include Chingu
 local = File.expand_path File.dirname(__FILE__)
 $LOAD_PATH.unshift local unless $LOAD_PATH.include? local
 
-require "pitch"
+require "pitch/pitch"
 
 class Array
 	def sample
