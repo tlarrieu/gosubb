@@ -2,7 +2,7 @@ module Helpers
 
 module Dices
 	def roll type=:classic
-		Sample["dice.ogg"].play
+		Sample["dice.ogg"].play 0.2
 		_rand = 1 + rand(6)
 		case type
 		when :block

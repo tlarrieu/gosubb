@@ -7,6 +7,8 @@ require "helpers/images"
 
 module Menus
 
+# TODO implement reroll
+
 class DiceMenu < GameState
 	include Helpers::Dices
 
@@ -58,34 +60,25 @@ class DiceMenu < GameState
 	end
 
 	def click
-		found = false
 		@dices.each do |dice|
 			if dice.collision_at? $window.mouse_x, $window.mouse_y
+				@attacker.cant_move!
+				close
 				case dice.value
 				when :attacker_down
-					@attacker.down
-					found = true
+					@defender.down @attacker
 				when :both_down
-					@attacker.down
-					@defender.down
-					found = true
+					@attacker.down @defender
+					@defender.down @attacker
 				when :defender_stumble
-					@defender.stumble
-					found = true
+					@attacker.stumble @defender
 				when :defender_down
-					@defender.down
-					found = true
+					@attacker.down @defender
 				when :pushed
-					@defender.push
-					found = true
+					@attacker.push @defender
 				break
 				end
 			end
-		end
-
-		if found
-			@attacker.cant_move!
-			close
 		end
 	end
 end

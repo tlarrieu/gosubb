@@ -2,6 +2,8 @@ require 'chingu'
 include Chingu
 include Gosu
 
+require 'menus/push_menu'
+
 require 'helpers/measures'
 require 'helpers/dices'
 
@@ -33,6 +35,8 @@ class Player < GameObject
 		@target_x  = @x
 		@target_y  = @y
 		@velocity  = 0.23
+
+		@footsteps = Sample["footsteps.ogg"]
 
 		@selected  = false
 
@@ -105,10 +109,12 @@ class Player < GameObject
 				ty = @y + vy
 			end
 
+
 			if [tx, ty] == t_pos
 				catch! if @ball.pos == @path[@cur_node] unless @has_ball
 				@cur_node += 1
 				@cur_ma   -= 1
+				@footsteps.play
 			end
 
 			@x, @y = tx, ty
@@ -149,9 +155,20 @@ class Player < GameObject
 		@cur_node  = 0
 		@path      = path
 		@has_moved = true
-		true
 
 		@pitch.lock
+		true
+	end
+
+	def push_to! x, y
+		return false if @pitch[[x,y]]
+		Sample["punch.ogg"].play
+		@target_x, @target_y = to_screen_coords [x,y]
+		@path     = [[x, y]]
+		@cur_node = 0
+
+		@pitch.lock
+		true
 	end
 
 	def can_move_to? x, y
@@ -179,6 +196,7 @@ class Player < GameObject
 			case roll_agility @stats[:agi]
 			when :success
 				x, y = target_player.pos
+				Sample["pass_med.ogg"].play
 				@ball.move_to! x, y
 				event! :pass
 			when :fumble
@@ -205,18 +223,20 @@ class Player < GameObject
 		return false
 	end
 
-	def down
-		end_turn if @team == @pitch.active_team
+	def down target_player
+		Sample["ko.ogg"].play
+		target_player.end_turn if target_player.team == @pitch.active_team
 	end
 
-	def push
+	def push target_player
+		parent.push_game_state PushMenu.new :attacker => self, :defender => target_player, :pitch => @pitch
 	end
 
-	def stumble
+	def stumble target_player
 		if @abilities.include? :dodge
-			push
+			push target_player
 		else
-			down
+			down target_player
 		end
 	end
 
@@ -235,7 +255,7 @@ class Player < GameObject
 
 	def event! symb
 		msg = ""
-		color = 0xFF477B28
+		color = 0xFF00FF00
 		success = true
 		case symb
 		when :pass
@@ -256,7 +276,7 @@ class Player < GameObject
 			msg = "Dodge !"
 		end
 		@text.destroy! if @text # We do not want to have many text boxes displayed at the same time
-		@text = FloatingText.create(msg, :x => @x, :y => @y - 1.5 * height, :timer => 2000, :color => color)
+		@text = FloatingText.create(msg, :x => @x, :y => @y - height - 22, :timer => 2000, :color => color)
 		end_turn unless success if @pitch.active_team == @team
 	end
 

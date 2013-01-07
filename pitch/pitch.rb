@@ -30,8 +30,6 @@ class Pitch < GameState
 		@sound       = Sample["turnover.ogg"]
 		@active_team = 0
 
-		@fps = FPSText.create "fps", :x => 15, :y => 10
-
 		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => :turnover!, :escape => :show_menu, :e => :edit }
 
 		x, y  = to_screen_coords [12, 8]
@@ -55,6 +53,12 @@ class Pitch < GameState
 		@hud = HUD.create :teams => @teams
 
 		randomize
+	end
+
+	def setup
+		# Here we force refresh of the movemement allowance
+		# we do that to fix a glitch occuring when leaving dice menu state
+		show_movement
 	end
 
 	def finalize
@@ -95,7 +99,6 @@ class Pitch < GameState
 
 	def turnover!
 		@turnover = true
-
 	end
 
 	def turnover?
@@ -184,6 +187,7 @@ class Pitch < GameState
 		# Turnover
 		if turnover? and @barrier == 0
 			new_turn!
+			Sample["turnover.ogg"].play 0.3
 			@text = FloatingText.create "Turnover !",
 			                            :x => @background.width / 2.0,
 			                            :y => $window.height - 100,
@@ -238,7 +242,7 @@ class Pitch < GameState
 					w, color = 0, :green
 				end
 			else
-				w, color = 1, :red
+				w, color = 1, :gray
 			end
 
 			p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2
@@ -248,7 +252,7 @@ class Pitch < GameState
 					c_rect = Rect.new x, y, 1, 1
 					if self[[x,y]].nil? and p_rect.collide_rect? c_rect
 						x, y = to_screen_coords [x,y]
-						@ma_squares << Square.create( :x => x, :y => y, :type => :ma, :color => color, :alpha => 180 )
+						@ma_squares << Square.create( :x => x, :y => y, :type => :square, :color => color, :alpha => 180 )
 					end
 				end
 			end
@@ -262,7 +266,7 @@ class Pitch < GameState
 		if path.length <= @selected.cur_ma
 			path.each do |p|
 				i, j = to_screen_coords p
-				@ma_squares << Square.create( :x => i, :y => j, :type => :ma, :color => :green )
+				@ma_squares << Square.create( :x => i, :y => j, :type => :square, :color => :green )
 			end
 			@action_coords = [x,y]
 		end

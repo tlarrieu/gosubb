@@ -7,6 +7,7 @@ include Chingu
 local = File.expand_path File.dirname(__FILE__)
 $LOAD_PATH.unshift local unless $LOAD_PATH.include? local
 
+require "pitch/floating_text"
 require "pitch/pitch"
 
 class Array
@@ -21,8 +22,12 @@ class Game < Window
 
 	def initialize
 		super 1384, 984, true
+		self.input   = { :q => :close }
 		self.cursor  = false
 		self.factor  = 1
+		self.volume = 0.8
+
+		@fps = FPSText.create "fps", :x => 15, :y => 10
 
 		change_cursor :normal
 

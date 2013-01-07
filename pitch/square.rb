@@ -3,36 +3,23 @@ include Chingu
 include Gosu
 
 class Square < GameObject
+	traits :bounding_box
+
 	attr_reader :image, :rect
 
-	@@type  = :ma
+	@@type  = :state
 	@@color = :green
 
 	def initialize options={}
 		@type = options.delete(:type) || @@type
 		@color = options.delete(:color) || @@color
 
+		valid_types = [:state, :square]
+		raise ArgumentError, "Wrong type #{@type}" unless valid_types.include? @type
+		valid_colors = { :state => [:red, :green, :yellow], :square => [:green, :blue, :gray]}
+		raise ArgumentError, "Wrong color #{@color}" unless valid_colors[@type].include? @color
 
-		str = ""
-		case @type
-			when :state
-				str += "selected-"
-			else
-				str += "square-"
-		end
-		case @color
-			when :red
-				str += "red"
-			when :orange
-				str += "orange"
-			when :yellow
-				str += "yellow"
-			else
-				str += "green"
-		end
-		str += ".png"
-
+		@image = Image["#{@type}-#{@color}.png"]
 		super
-		@image = Image[str]
 	end
 end

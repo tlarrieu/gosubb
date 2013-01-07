@@ -6,6 +6,7 @@ module Menus
 
 class GameMenu < GameState
 	def setup
+		Sample["pause_in.ogg"].play 0.5
 		@text = ""
 		items = {"Resume" => :close, "Exit" => :exit, "Save" => :save, "Load" => :load}.sort_by { |key,value| key }
 		@menu = Menu.create :menu_items => items,
@@ -26,6 +27,10 @@ class GameMenu < GameState
 
 		@bg = GameObject.new :image => "pause_bg.jpg", :x => $window.width / 2.0, :y => $window.height / 2.0, :scale => 0.8, :zorder => 0
 		self.input = { :escape => :close }
+	end
+
+	def finalize
+		Sample["pause_out.ogg"].play 0.5
 	end
 
 	def draw
@@ -148,6 +153,7 @@ class Menu < BasicGameObject
 	end
 
 	def on_select(object)
+		Sample["menu_select.ogg"].play 0.6
 		object.color = @select_color
 	end
 
