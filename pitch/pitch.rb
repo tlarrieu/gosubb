@@ -1,4 +1,4 @@
-require "menus/dice_menu"
+require "menus/dice_state"
 require "menus/game_menu"
 include Menus
 

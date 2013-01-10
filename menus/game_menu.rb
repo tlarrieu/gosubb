@@ -127,7 +127,11 @@ class Menu < BasicGameObject
 		@selected = options[:selected] || 0
 		step(0)
 
-		self.input = {[:up, :s] => lambda{step(-1)}, [:down, :t] => lambda{step(1)}, [:return, :space, :mouse_left] => :select}
+		self.input = {
+			[:up, :s] => lambda{step(-1)},
+			[:down, :t] => lambda{step(1)},
+			[:return, :space, :mouse_left] => :select
+		}
 	end
 
 	#

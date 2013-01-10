@@ -27,7 +27,7 @@ class Game < Window
 		self.factor  = 1
 		self.volume = 0.8
 
-		@fps = FPSText.create "fps", :x => 15, :y => 10
+		@fps = FPSText.create "fps", :x => 15, :y => 10, :zorder => 1000
 
 		change_cursor :normal
 
@@ -47,7 +47,6 @@ class Game < Window
 	def change_cursor symb
 		raise ArgumentError, "#{symb}" unless symb.is_a? Symbol
 		@cursor_image = Image["cursors/#{symb}.png"]
-
 	end
 end
 

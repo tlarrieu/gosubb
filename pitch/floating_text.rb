@@ -25,7 +25,11 @@ end
 
 class FPSText < Chingu::Text
 	def update
-		super
-		self.text = "FPS: #{$window.fps}"
+		begin
+			super
+			self.text = "FPS: #{$window.fps}"
+		rescue
+			nil
+		end
 	end
 end

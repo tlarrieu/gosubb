@@ -2,7 +2,7 @@ require 'chingu'
 include Chingu
 include Gosu
 
-require 'menus/push_menu'
+require 'menus/post_combat_state'
 
 require 'helpers/measures'
 require 'helpers/dices'
@@ -109,7 +109,6 @@ class Player < GameObject
 				ty = @y + vy
 			end
 
-
 			if [tx, ty] == t_pos
 				catch! if @ball.pos == @path[@cur_node] unless @has_ball
 				@cur_node += 1
@@ -162,7 +161,7 @@ class Player < GameObject
 
 	def push_to! x, y
 		return false if @pitch[[x,y]]
-		Sample["punch.ogg"].play
+
 		@target_x, @target_y = to_screen_coords [x,y]
 		@path     = [[x, y]]
 		@cur_node = 0
@@ -184,9 +183,6 @@ class Player < GameObject
 		# Checking if a path exists to x, y
 		return false if stuck?
 		return true
-	end
-
-	def can_blitz?
 	end
 
 	def pass target_player
@@ -215,28 +211,34 @@ class Player < GameObject
 		return false
 	end
 
+	def tackle target_player
+		target_player.end_turn
+	end
+
 	def block target_player
 		if can_block? target_player
-			parent.push_game_state DiceMenu.new(:attacker => self, :defender => target_player)
+			parent.push_game_state DiceState.new(:attacker => self, :defender => target_player)
 			return true
 		end
 		return false
 	end
 
-	def down target_player
+	def down target_player, push=false
 		Sample["ko.ogg"].play
+		parent.push_game_state PostCombatState.new @attacker => self, :defender => target_player, :pitch => @pitch if push
 		target_player.end_turn if target_player.team == @pitch.active_team
 	end
 
 	def push target_player
-		parent.push_game_state PushMenu.new :attacker => self, :defender => target_player, :pitch => @pitch
+		Sample["punch.ogg"].play
+		parent.push_game_state PostCombatState.new :attacker => self, :defender => target_player, :pitch => @pitch
 	end
 
 	def stumble target_player
 		if @abilities.include? :dodge
 			push target_player
 		else
-			down target_player
+			down target_player, true
 		end
 	end
 
@@ -346,6 +348,9 @@ class Player < GameObject
 
 	def has_ball?
 		@has_ball
+	end
+
+	def can_blitz?
 	end
 
 	def pos
