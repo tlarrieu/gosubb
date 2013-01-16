@@ -5,6 +5,8 @@ include Chingu
 require "player/player"
 require "pitch/team"
 
+require "helpers/barrier"
+
 class HUD < GameObject
 
 	def initialize options = {}
@@ -45,6 +47,14 @@ class HUD < GameObject
 	def clear
 		@player_block.set @player
 	end
+
+	def lock
+		@player_block.lock
+	end
+
+	def unlock
+		@player_block.unlock
+	end
 end
 
 
@@ -74,7 +84,6 @@ class TeamBlock < GameObject
 
 	def update
 		super
-
 		time = Time.at(@team.time_left / 1000)
 		nb_min = time.min
 		nb_sec = time.sec
@@ -84,12 +93,12 @@ class TeamBlock < GameObject
 		else
 			@time.text = ""
 		end
-
 		@elapsed_time += $window.milliseconds_since_last_tick
 	end
 end
 
 class PlayerBlock < GameObject
+	include Barrier
 
 	def initialize options = {}
 		super options.merge( { :rotation_center => :center_center } )
@@ -106,11 +115,13 @@ class PlayerBlock < GameObject
 		if player.nil?
 			@txt.each { |key,value| @txt[key].text = ""}
 		else
-			@txt[:ma].text  = "MA  : #{player.stats[:ma]}"
-			@txt[:str].text = "STR : #{player.stats[:str]}"
-			@txt[:agi].text = "AGI : #{player.stats[:agi]}"
-			@txt[:arm].text = "ARM : #{player.stats[:arm]}"
-			@portrait = GameObject.create :x => @x, :y => @y, :image => player.image, :factor => 2
+			unlocked? do
+				@txt[:ma].text  = "MA  : #{player.stats[:ma]}"
+				@txt[:str].text = "STR : #{player.stats[:str]}"
+				@txt[:agi].text = "AGI : #{player.stats[:agi]}"
+				@txt[:arm].text = "ARM : #{player.stats[:arm]}"
+				@portrait = GameObject.create :x => @x, :y => @y, :image => player.image, :factor => 2
+			end
 		end
 	end
 end

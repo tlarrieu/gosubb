@@ -8,7 +8,9 @@ local = File.expand_path File.dirname(__FILE__)
 $LOAD_PATH.unshift local unless $LOAD_PATH.include? local
 
 require "pitch/floating_text"
-require "pitch/play_state"
+require "states/play_state"
+
+include GameStates
 
 class Game < Window
 	attr_accessor :selected

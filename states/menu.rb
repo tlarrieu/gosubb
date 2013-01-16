@@ -1,62 +1,3 @@
-require 'chingu'
-include Chingu
-include Gosu
-
-module Menus
-
-class GameMenu < GameState
-	def setup
-		Sample["pause_in.ogg"].play 0.5
-		@text = ""
-		items = {"Resume" => :close, "Exit" => :exit, "Save" => :save, "Load" => :load}.sort_by { |key,value| key }
-		@menu = Menu.create :menu_items => items,
-		                    :x => $window.width / 2.0,
-		                    :y => $window.height / 2.0,
-		                    :zorder => 2,
-		                    :select_color => 0xFF0056D6,
-		                    :unselect_color => 0xFF000000,
-		                    :spacing => 30,
-		                    :bg_color => 0x33FFFFFF,
-		                    :bg_padding_r => 55,
-		                    :bg_padding_l => 55,
-		                    :bg_padding_t => 20,
-		                    :bg_padding_b => 5,
-		                    :anchor => :center_center,
-		                    :font => "media/fonts/Colleged.ttf",
-		                    :font_size => 40
-
-		@bg = GameObject.new :image => "pause_bg.jpg", :x => $window.width / 2.0, :y => $window.height / 2.0, :scale => 0.8, :zorder => 0
-		self.input = { :escape => :close }
-	end
-
-	def finalize
-		Sample["pause_out.ogg"].play 0.5
-	end
-
-	def draw
-		super
-		@bg.draw
-		@menu.draw
-	end
-
-	def update
-		super
-		@menu.update
-	end
-
-	def exit
-		$window.close
-	end
-
-	def save
-
-	end
-
-	def load
-
-	end
-end
-
 class Menu < BasicGameObject
 	include Chingu::Helpers::InputClient, Chingu::Helpers::RotationCenter
 	attr_accessor :menu_items, :visible, :width, :height, :x, :y
@@ -79,13 +20,16 @@ class Menu < BasicGameObject
 		@bg_padding_r   = options.delete(:bg_padding_r) || 0
 		@bg_padding_t   = options.delete(:bg_padding_t) || 0
 		@bg_padding_b   = options.delete(:bg_padding_b) || 0
-
+		@orientation    = options.delete(:orientation)  || :vertical
+		raise ArgumentException, "Unknown orientation : #{@orientation}" unless [:vertical, :horizontal].include? @orientation
 
 		@zorder         = options.delete(:zorder) || 0
 
 		@width  = 0
 		@height = 0
 
+
+		max_width = 0
 		menu_items.each do |key, value|
 			item = if key.is_a? String
 				opt = {:size => @font_size}.merge(options.dup)
@@ -106,12 +50,25 @@ class Menu < BasicGameObject
 			item.zorder = @zorder + 1
 			@items << item
 
-			@width   = item.width if item.width > @width
-			@height += item.height
+			if @orientation == :vertical
+				@width   = item.width if item.width > @width
+				@height += item.height
+			else
+				@width += item.width
+				max_width = item.width if item.width > max_width
+				@height = item.height if item.height > @height
+			end
 		end
-		@height += (@items.count - 1) * @spacing unless @items.nil?
 
-		y = @y - @height / 2.0 + @spacing
+		x,y = 0, 0
+		if @orientation == :vertical
+			@height += (@items.count - 1) * @spacing if @items
+			y = @y - @height / 2.0 + @spacing
+		else
+			@width += (@items.count - 1) * @spacing if @items
+			x = @x - @width / 2.0
+		end
+
 
 		anchor_x, anchor_y = rotation_center(@anchor)
 		anchor_x -= 0.5
@@ -119,9 +76,16 @@ class Menu < BasicGameObject
 
 		@items.each do |item|
 			item.rotation_center = @anchor
-			item.x = @x + anchor_x * @width
-			item.y = y + anchor_y * item.height
-			y += item.height + @spacing
+
+			if @orientation == :vertical
+				item.x = @x + anchor_x * @width
+				item.y = y + anchor_y * item.height
+				y += item.height + @spacing
+			else
+				item.x = x + anchor_x * item.width
+				item.y = @y + anchor_y * @height
+				x += max_width + @spacing
+			end
 		end
 
 		@selected = options[:selected] || 0
@@ -165,16 +129,15 @@ class Menu < BasicGameObject
 		i = 0
 		# This should be done with :bounding_box trait but I cant seem
 		# to add a trait to items for some reasons
-		begin
-			@items.each do |item|
-				y = $window.mouse_y
+		@items.each do |item|
+			y = $window.mouse_y
+			x = $window.mouse_x
+			if item.x - item.width / 2.0 <= x and item.x +  item.width / 2.0 >= x
 				if item.y - item.height / 2.0 <= y and item.y +  item.height / 2.0 >= y
 					step(i - @selected) if @selected != i
 				end
-				i += 1
 			end
-		rescue
-			nil
+			i += 1
 		end
 	end
 
@@ -209,6 +172,4 @@ class Menu < BasicGameObject
 			# TODO possibly raise an error? This ought to be handled when the input is specified in the first place.
 		end
 	end
-end
-
 end

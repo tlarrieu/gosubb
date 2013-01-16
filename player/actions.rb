@@ -17,7 +17,7 @@ module Actions
 	end
 
 	def move_to! x, y
-		return false unless can_move_to? x, y
+		return false unless can_move_to?(x, y)
 		coords = [x, y]
 
 		# Getting @path through A*

@@ -1,6 +1,5 @@
-require "menus/combat_state"
-require "menus/game_menu"
-include Menus
+require "states/combat_state"
+require "states/main_menu_state"
 
 require "pitch/floating_text"
 require "pitch/ball"
@@ -10,7 +9,9 @@ require "pitch/hud"
 require "player/player"
 
 require "helpers/measures"
+require "helpers/barrier"
 
+module GameStates
 # Transitionnal class, we gotta handle this asap
 class Pitch
 	WIDTH       = 26
@@ -25,9 +26,10 @@ end
 
 class PlayState < GameState
 	include Helpers::Measures
+	include Barrier
 
 	attr_accessor :active_team, :teams
-	attr_reader   :selected
+	attr_reader   :selected, :hud
 
 	def initialize
 		super
@@ -41,7 +43,6 @@ class PlayState < GameState
 		@ball.set_pos! x, y, false
 
 		@action_coords = nil
-		@barrier       = 0
 
 		@selected      = nil
 		@last_selected = nil
@@ -69,7 +70,7 @@ class PlayState < GameState
 	end
 
 	def show_menu
-		push_game_state GameMenu.new
+		push_game_state MainMenuState.new
 	end
 
 	# FIXME : this is buggy for now as we dont really care yet about chingu's convention
@@ -80,14 +81,6 @@ class PlayState < GameState
 
 	def debug
 		push_game_state GameStates::Debug.new
-	end
-
-	def lock
-		@barrier += 1
-	end
-
-	def unlock
-		@barrier -= 1 if @barrier >= 1
 	end
 
 	def new_turn!
@@ -148,15 +141,17 @@ class PlayState < GameState
 		@hud.clear unless found
 
 		# Turnover
-		if turnover? and @barrier == 0
-			new_turn!
-			Sample["turnover.ogg"].play 0.3
-			@text = FloatingText.create "Turnover !",
-			                            :x => @background.width / 2.0,
-			                            :y => $window.height - 100,
-			                            :timer => 3000,
-			                            :color => 0xFFFF0000,
-			                            :size => 40
+		if turnover?
+			unlocked? do
+				new_turn!
+				Sample["turnover.ogg"].play 0.3
+				@text = FloatingText.create "Turnover !",
+				                            :x => @background.width / 2.0,
+				                            :y => $window.height - 100,
+				                            :timer => 3000,
+				                            :color => 0xFFFF0000,
+				                            :size => 40
+			end
 		end
 	end
 
@@ -170,7 +165,7 @@ class PlayState < GameState
 	end
 
 	def action
-		if @barrier == 0
+		unlocked? do
 			x, y = to_pitch_coords [$window.mouse_x, $window.mouse_y]
 			unless @selected.nil?
 				unless @action_coords == [x,y]
@@ -285,4 +280,6 @@ class PlayState < GameState
 			end
 		end
 	end
+end
+
 end

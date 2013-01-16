@@ -4,9 +4,9 @@ include Gosu
 
 require "helpers/dices"
 require "helpers/images"
-require "menus/post_combat_state"
+require "states/post_combat_state"
 
-module Menus
+module GameStates
 
 # TODO implement reroll
 
@@ -17,7 +17,6 @@ class CombatState < GameState
 		super
 		self.input = { :mouse_left => :click }
 		@color = 0xAA000000
-
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
@@ -115,7 +114,7 @@ class DiceObject < GameObject
 		end
 		parent.close
 		if push
-			unless @defender.paused?
+			unless @defender.paused
 				parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender, :pitch => @pitch
 			end
 		end

@@ -4,7 +4,7 @@ include Gosu
 
 require 'helpers/measures'
 require 'helpers/dices'
-require 'menus/combat_state'
+require 'states/combat_state'
 
 require 'pitch/square'
 require 'pitch/floating_text'
@@ -64,6 +64,13 @@ class Player < GameObject
 		@path      = nil
 		@blitz     = false
 		# Later we will have to manage injuries recovery down there
+	end
+
+	def end_turn
+		if @pitch.active_team == @team
+			@pitch.turnover!
+			cant_move!
+		end
 	end
 
 	# -------------------------------
@@ -143,7 +150,6 @@ class Player < GameObject
 	# ----------- Actions -----------
 	# -------------------------------
 
-
 	def event! symb
 		msg = ""
 		color = 0xFF00FF00
@@ -171,16 +177,7 @@ class Player < GameObject
 		end_turn unless success
 	end
 
-	def end_turn
-		if @pitch.active_team == @team
-			@pitch.turnover!
-			cant_move!
-		end
-	end
 
-	# -------------------------------
-	# ------------ State ------------
-	# -------------------------------
 
 
 	# -------------------------------
