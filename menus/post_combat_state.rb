@@ -17,7 +17,6 @@ class PostCombatState < GameState
 		@attacker = options[:attacker]
 		@defender = options[:defender]
 		@pitch    = options[:pitch]
-		@action   = options[:down] || false
 
 		@squares   = []
 		x, y = @defender.pos
@@ -33,6 +32,11 @@ class PostCombatState < GameState
 			end
 		end
 
+	end
+
+	def update
+		super
+		previous_game_state.update
 	end
 
 	def draw

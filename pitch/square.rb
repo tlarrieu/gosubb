@@ -23,3 +23,15 @@ class Square < GameObject
 		super
 	end
 end
+
+class MovementSquare < Square
+	def initialize options={}
+		super options.merge({:type => :square})
+	end
+end
+
+class StateSquare < Square
+	def initialize options={}
+		super options.merge({:type => :state})
+	end
+end

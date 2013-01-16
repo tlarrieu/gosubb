@@ -66,13 +66,14 @@ class TeamBlock < GameObject
 			@time = Text.create "", :x => @x - a_x * 280, :y => @y, :rotation_center => rot_cent, :color => color, :size => 40
 		end
 
+		@team.on_turn_change { |turn| @turn.text = "#{turn} / 16" }
+		@team.on_score_change { |score| @score.text = "#{score}" }
+
 		@elapsed_time = 0
 	end
 
 	def update
 		super
-		@score.text = "#{@team.score}"
-		@turn.text  = "#{@team.turn} / 16"
 
 		time = Time.at(@team.time_left / 1000)
 		nb_min = time.min
@@ -93,25 +94,23 @@ class PlayerBlock < GameObject
 	def initialize options = {}
 		super options.merge( { :rotation_center => :center_center } )
 		@txt = {}
-	end
-
-	def draw
-		@txt.each_value { |txt| txt.draw }
-		@image.draw unless @image.nil?
+		@txt[:ma]  = Text.create( "",  :x => @x - 70, :y => @y - 45, :zorder => 2, :rotation_center => :center_right )
+		@txt[:str] = Text.create( "", :x => @x - 80, :y => @y - 15, :zorder => 2, :rotation_center => :center_right )
+		@txt[:agi] = Text.create( "", :x => @x - 80, :y => @y + 15, :zorder => 2, :rotation_center => :center_right )
+		@txt[:arm] = Text.create( "", :x => @x - 70, :y => @y + 45, :zorder => 2, :rotation_center => :center_right )
 	end
 
 	def set player
 		@player = player
+		@portrait.destroy if @portrait
 		if player.nil?
-			@txt = {}
-			@image = nil
+			@txt.each { |key,value| @txt[key].text = ""}
 		else
-			@txt[:ma]  = Text.new( "MA  : #{player.stats[:ma]}",  :x => @x - 70, :y => @y - 45, :zorder => 2, :rotation_center => :center_right )
-			@txt[:str] = Text.new( "STR : #{player.stats[:str]}", :x => @x - 80, :y => @y - 15, :zorder => 2, :rotation_center => :center_right )
-			@txt[:agi] = Text.new( "AGI : #{player.stats[:agi]}", :x => @x - 80, :y => @y + 15, :zorder => 2, :rotation_center => :center_right )
-			@txt[:arm] = Text.new( "ARM : #{player.stats[:arm]}", :x => @x - 70, :y => @y + 45, :zorder => 2, :rotation_center => :center_right )
-			@image = GameObject.new :x => @x, :y => @y, :image => player.image
-			@image.factor = 2
+			@txt[:ma].text  = "MA  : #{player.stats[:ma]}"
+			@txt[:str].text = "STR : #{player.stats[:str]}"
+			@txt[:agi].text = "AGI : #{player.stats[:agi]}"
+			@txt[:arm].text = "ARM : #{player.stats[:arm]}"
+			@portrait = GameObject.create :x => @x, :y => @y, :image => player.image, :factor => 2
 		end
 	end
 end

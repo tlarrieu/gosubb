@@ -19,10 +19,10 @@ module Dices
 				else return :pushed
 			end
 
-		when :injury_effect
+		when :injury
 			_rand2 = 1 + rand(5)
-			_sum = _rand + _rand2
-			case _sum
+			sum = _rand + _rand2
+			case sum
 			when 2..7
 				return :stun
 			when 8..9

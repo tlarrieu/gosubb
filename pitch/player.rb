@@ -2,10 +2,9 @@ require 'chingu'
 include Chingu
 include Gosu
 
-require 'menus/post_combat_state'
-
 require 'helpers/measures'
 require 'helpers/dices'
+require 'menus/combat_state'
 
 require 'pitch/square'
 require 'pitch/floating_text'
@@ -15,12 +14,12 @@ class Player < GameObject
 	include Helpers::Dices
 
 	traits :bounding_circle
-	attr_reader :team, :cur_ma, :stats, :race, :role
+	attr_reader :team, :cur_ma, :stats, :race, :role, :state
 
 	@@str = 3
 	@@agi = 2
 	@@ma  = 4
-	@@arm = 4
+	@@arm = 6
 
 	def initialize options = {}
 		super
@@ -29,8 +28,7 @@ class Player < GameObject
 		@ball      = options[:ball]  or raise "Unable to find ball for #{self}"
 		@race      = options[:race] || "human"
 		@role      = options[:role] || "blitzer"
-		side       = @team == 0 ? "A" : "B"
-		@image     = Image["teams/#{race}/#{role}#{side}.gif"]
+		@image     = Image["teams/#{race}/#{role}#{@team.side}.gif"]
 		@x, @y     = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x  = @x
 		@target_y  = @y
@@ -43,6 +41,8 @@ class Player < GameObject
 		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
 		@abilities = []
 		@has_ball  = options[:has_ball] or false
+		@state     = :heathy
+
 		new_turn!
 	end
 
@@ -70,15 +70,15 @@ class Player < GameObject
 	end
 
 	def update
-		params = {:x => @x, :y => @y, :type => :state, :color => :yellow}
-
+		super
+		params = {:x => @x, :y => @y, :color => :yellow}
 		if @selected
-			@square = Square.new  params.merge(:color => :yellow)
+			@square = StateSquare.new params.merge(:color => :yellow)
 		elsif @team == @pitch.active_team
 			if can_move?
-				@square = Square.new  params.merge(:color => :green)
+				@square = StateSquare.new params.merge(:color => :green)
 			else
-				@square = Square.new  params.merge(:color => :red)
+				@square = StateSquare.new params.merge(:color => :red)
 			end
 		else
 			@square = nil
@@ -110,8 +110,13 @@ class Player < GameObject
 			end
 
 			if [tx, ty] == t_pos
-				catch! if @ball.pos == @path[@cur_node] unless @has_ball
-				@cur_node += 1
+				success = true
+				success = catch! if @ball.pos == @path[@cur_node] unless @has_ball
+				unless success
+					@cur_node = @path.size
+				else
+					@cur_node += 1
+				end
 				@cur_ma   -= 1
 				@footsteps.play
 			end
@@ -141,6 +146,10 @@ class Player < GameObject
 
 	def unselect
 		@selected = false
+	end
+
+	def blitz!
+		@blitz = true if can_blitz
 	end
 
 	def move_to! x, y
@@ -217,28 +226,46 @@ class Player < GameObject
 
 	def block target_player
 		if can_block? target_player
-			parent.push_game_state DiceState.new(:attacker => self, :defender => target_player)
+			parent.push_game_state CombatState.new( :attacker => self, :defender => target_player, :pitch => @pitch )
 			return true
 		end
 		return false
 	end
 
-	def down target_player, push=false
-		Sample["ko.ogg"].play
-		parent.push_game_state PostCombatState.new @attacker => self, :defender => target_player, :pitch => @pitch if push
+	def down target_player
 		target_player.end_turn if target_player.team == @pitch.active_team
+		target_player.injure!
+	end
+
+	def injure!
+		if roll + roll > stats[:arm]
+			@state = roll :injury
+			case @state
+			when :stun
+				Sample["fall.ogg"].play
+			when :ko
+				Sample["ko.ogg"].play
+				pause!
+			when :out
+				Sample["hurt.ogg"].play
+				pause!
+			end
+		else
+			@state = :hit
+			Sample["fall.ogg"].play
+		end
+		on_state_change
 	end
 
 	def push target_player
 		Sample["punch.ogg"].play
-		parent.push_game_state PostCombatState.new :attacker => self, :defender => target_player, :pitch => @pitch
 	end
 
 	def stumble target_player
 		if @abilities.include? :dodge
 			push target_player
 		else
-			down target_player, true
+			down target_player
 		end
 	end
 
@@ -279,7 +306,7 @@ class Player < GameObject
 		end
 		@text.destroy! if @text # We do not want to have many text boxes displayed at the same time
 		@text = FloatingText.create(msg, :x => @x, :y => @y - height - 22, :timer => 2000, :color => color)
-		end_turn unless success if @pitch.active_team == @team
+		end_turn unless success
 	end
 
 	def end_turn
@@ -300,7 +327,7 @@ class Player < GameObject
 	end
 
 	def moving?
-		return [@target_x, @target_y] == [@x, @y]
+		return [@target_x, @target_y] != [@x, @y]
 	end
 
 	def can_move?
@@ -351,6 +378,7 @@ class Player < GameObject
 	end
 
 	def can_blitz?
+		not @team.blitz?
 	end
 
 	def pos
@@ -359,5 +387,14 @@ class Player < GameObject
 
 	def screen_pos
 		[@x,@y]
+	end
+
+	# -------------------------------
+	# ---------- Listeners ----------
+	# -------------------------------
+
+	private
+	def on_state_change
+		@team >> self
 	end
 end

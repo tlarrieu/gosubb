@@ -8,14 +8,7 @@ local = File.expand_path File.dirname(__FILE__)
 $LOAD_PATH.unshift local unless $LOAD_PATH.include? local
 
 require "pitch/floating_text"
-require "pitch/pitch"
-
-class Array
-	def sample
-		return self[rand(count)] if count > 0
-		nil
-	end
-end
+require "pitch/play_state"
 
 class Game < Window
 	attr_accessor :selected
@@ -25,13 +18,13 @@ class Game < Window
 		self.input   = { :q => :close }
 		self.cursor  = false
 		self.factor  = 1
-		self.volume = 0.8
+		#self.volume = 0.8
 
 		@fps = FPSText.create "fps", :x => 15, :y => 10, :zorder => 1000
 
 		change_cursor :normal
 
-		push_game_state Pitch.new
+		push_game_state PlayState.new
 	end
 
 	def update

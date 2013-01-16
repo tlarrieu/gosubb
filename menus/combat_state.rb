@@ -4,12 +4,13 @@ include Gosu
 
 require "helpers/dices"
 require "helpers/images"
+require "menus/post_combat_state"
 
 module Menus
 
 # TODO implement reroll
 
-class DiceState < GameState
+class CombatState < GameState
 	include Helpers::Dices
 
 	def initialize options = {}
@@ -20,6 +21,7 @@ class DiceState < GameState
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
+		@pitch    = options[:pitch]
 		diff = (@attacker.stats[:str] - @defender.stats[:str]).abs
 		lowest = [@attacker.stats[:str], @defender.stats[:str]].min
 		nb_dices = if diff >= 3 * lowest
@@ -37,7 +39,15 @@ class DiceState < GameState
 
 		@dices = []
 		nb_dices.times do
-			@dices << DiceObject.create( :value => roll(:block), :x => x, :y => y, :zorder => 201 )
+			@dices << DiceObject.create(
+			                            :value => roll(:block),
+			                            :x => x,
+			                            :y => y,
+			                            :zorder => 201,
+			                            :defender => @defender,
+			                            :attacker => @attacker,
+			                            :pitch => @pitch
+			                           )
 			x += 50
 		end
 
@@ -63,21 +73,8 @@ class DiceState < GameState
 		@dices.each do |dice|
 			if dice.collision_at? $window.mouse_x, $window.mouse_y
 				@attacker.cant_move!
-				close
-				case dice.value
-				when :attacker_down
-					@defender.down @attacker
-				when :both_down
-					@attacker.down @defender
-					@defender.down @attacker
-				when :defender_stumble
-					@attacker.stumble @defender
-				when :defender_down
-					@attacker.down @defender, true
-				when :pushed
-					@attacker.push @defender
+				dice.select
 				break
-				end
 			end
 		end
 	end
@@ -90,8 +87,38 @@ class DiceObject < GameObject
 	attr_reader :value
 
 	def initialize options = {}
-		@value = options.delete(:value)
+		@value    = options.delete(:value)
+		@attacker = options.delete(:attacker)
+		@defender = options.delete(:defender)
+		@pitch    = options.delete(:pitch)
+
 		super({:image => dice_image(@value)}.merge(options))
+	end
+
+	def select
+		push = false
+		case @value
+		when :attacker_down
+			@defender.down @attacker
+		when :both_down
+			@attacker.down @defender
+			@defender.down @attacker
+		when :defender_stumble
+			@attacker.stumble @defender
+			push = true
+		when :defender_down
+			@attacker.down @defender
+			push = true
+		when :pushed
+			@attacker.push @defender
+			push = true
+		end
+		parent.close
+		if push
+			unless @defender.paused?
+				parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender, :pitch => @pitch
+			end
+		end
 	end
 end
 
