@@ -7,6 +7,8 @@ require "pitch/ball"
 require "pitch/team"
 require "pitch/hud"
 
+require "player/player"
+
 require "helpers/measures"
 
 # Transitionnal class, we gotta handle this asap

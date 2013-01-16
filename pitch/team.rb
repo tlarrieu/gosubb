@@ -19,6 +19,9 @@ class Team < GameObjectList
 		@kos     = []
 		@dead    = []
 
+		@turn_listeners  = []
+		@score_listeners = []
+
 		@time_left = 0
 
 		@turns = 0
@@ -96,9 +99,11 @@ class Team < GameObjectList
 		case symb
 		when :point
 			@points += 1
+			#@score_listeners.each { |listener| listener.call(@points) }
 			@score_listener.call(@points) if @score_listener
 		when :turn
 			@turns += 1
+			#@turn_listeners.each { |listener| listener.call(@turns) }
 			@turn_listener.call(@turns) if @turn_listener
 		end
 	end
@@ -114,10 +119,12 @@ class Team < GameObjectList
 	# ---------- Listeners ----------
 
 	def on_turn_change &block
+		#@turn_listeners << block
 		@turn_listener = block
 	end
 
 	def on_score_change &block
-		@score_listener = block
+		#@score_listeners << block
+		@turn_listener = block
 	end
 end

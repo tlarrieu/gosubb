@@ -24,7 +24,7 @@ class PostCombatState < GameState
 			(-1..1).each do |j|
 				if i != 0 or j != 0
 					pos = [x + i, y + j]
-					if dist(pos, @attacker.pos, :infinity) > 1 and @pitch[pos].nil?
+					if dist(pos, @attacker.pos, :infinity) > 1.5 and @pitch[pos].nil?
 						spos = to_screen_coords pos
 						@squares << Square.create(:x => spos[0], :y => spos[1], :type => :square, :color => :blue, :zorder => 300)
 					end

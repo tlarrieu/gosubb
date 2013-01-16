@@ -2,7 +2,7 @@ require 'chingu'
 include Gosu
 include Chingu
 
-require "pitch/player"
+require "player/player"
 require "pitch/team"
 
 class HUD < GameObject
