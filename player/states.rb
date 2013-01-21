@@ -61,6 +61,11 @@ module States
 		not @team.blitz?
 	end
 
+	def on_pitch?
+		return true unless @state == :out || @state == :ko
+		return false
+	end
+
 	def pos
 		to_pitch_coords [@x, @y]
 	end

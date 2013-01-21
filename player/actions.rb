@@ -109,10 +109,8 @@ module Actions
 				Sample["fall.ogg"].play
 			when :ko
 				Sample["ko.ogg"].play
-				pause!
 			when :out
 				Sample["hurt.ogg"].play
-				pause!
 			end
 		else
 			@state = :hit

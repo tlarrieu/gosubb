@@ -2,7 +2,7 @@ require 'chingu'
 include Gosu
 include Chingu
 
-class Team < GameObjectList
+class Team
 	attr_accessor :time_left, :active
 	attr_reader   :side
 
@@ -33,29 +33,24 @@ class Team < GameObjectList
 		@players << player
 	end
 
-	def >> player
-		@players.delete player
-		@kos.delete player
-		@dead.delete player
-
-		case player.state
-		when :ko
-			@kos << player
+	def kill player
+		if @players.include? player
+			@dead << @players.delete(player)
 			player.destroy!
-		when :dead
-			@dead << player
-			player.destroy!
-		else
-			@players << player
 		end
 	end
 
-	def update
-		@players.each { |p| p.update }
+	def knock_out player
+		if @players.include? player
+			@kos << @players.delete(player)
+			player.destroy!
+		end
 	end
 
-	def draw
-		@players.each { |p| p.draw }
+	def wake_up player
+		if @kos.include? player
+			@players << @kos.delete(player)
+		end
 	end
 
 	def [] pos
@@ -99,11 +94,9 @@ class Team < GameObjectList
 		case symb
 		when :point
 			@points += 1
-			#@score_listeners.each { |listener| listener.call(@points) }
 			@score_listener.call(@points) if @score_listener
 		when :turn
 			@turns += 1
-			#@turn_listeners.each { |listener| listener.call(@turns) }
 			@turn_listener.call(@turns) if @turn_listener
 		end
 	end
@@ -119,12 +112,12 @@ class Team < GameObjectList
 	# ---------- Listeners ----------
 
 	def on_turn_change &block
-		#@turn_listeners << block
+		block.call(@turns)
 		@turn_listener = block
 	end
 
 	def on_score_change &block
-		#@score_listeners << block
-		@turn_listener = block
+		block.call(@points)
+		@score_listener = block
 	end
 end

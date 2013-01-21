@@ -20,7 +20,7 @@ class PostCombatState < GameState
 
 		push      = options[:push] || true
 
-		if push
+		if push and @defender.on_pitch?
 			@areas = {}
 			@areas[[-1, -1]] = [[ 0,  1], [ 1,  0], [ 1,  1]]
 			@areas[[-1,  0]] = [[ 1, -1], [ 1,  0], [ 1,  1]]

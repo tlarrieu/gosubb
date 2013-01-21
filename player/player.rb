@@ -186,6 +186,11 @@ class Player < GameObject
 
 	private
 	def on_state_change
-		@team >> self
+		case @state
+		when :out
+			@team.kill self
+		when :ko
+			@team.knock_out self
+		end
 	end
 end

@@ -119,7 +119,6 @@ class PlayState < GameState
 	def draw
 		super
 		@background.draw 0,0,0
-		@teams.each { |t| t.draw }
 	end
 
 	def update
@@ -130,7 +129,6 @@ class PlayState < GameState
 		# HUD update
 		found = false
 		@teams.each do |t|
-			t.update
 			t.each do |p|
 				if p.collision_at? $window.mouse_x, $window.mouse_y
 					@hud.show p
