@@ -27,3 +27,8 @@ In addition to the files you will find on this repository, you will also need 2 
 Please refer to the following page : https://github.com/jlnr/gosu/wiki
 
 It contains additionnal information on steps to follow to install gosu properly (the library needs a few more packages, which depends on the OS you are running)
+
+RUN
+===
+
+Just run main.rb. If you are lazy enough, you can also call rake at the root of the project, which will run it for you!
