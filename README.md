@@ -32,3 +32,5 @@ RUN
 ===
 
 Just run main.rb. If you are lazy enough, you can also call rake at the root of the project, which will run it for you!
+
+/!\ The project has only been tested with ruby-1.9.3, gosu-0.7.45 and chingu-0.8.1.
