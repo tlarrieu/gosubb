@@ -21,8 +21,9 @@ INSTALLATION
 ============
 
 In addition to the files you will find on this repository, you will also need 2 additional gems : 
-gem install chingu
-gem install gosu
+* gem install chingu
+* gem install gosu
 
 Please refer to the following page : https://github.com/jlnr/gosu/wiki
+
 It contains additionnal information on steps to follow to install gosu properly (the library needs a few more packages, which depends on the OS you are running)
