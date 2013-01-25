@@ -14,6 +14,21 @@ module States
 		@can_move
 	end
 
+	def can_move_to? x, y
+		coords = [x, y]
+		# Checking that [x, y] is in movement allowance range
+		return false if dist(pos, [x,y], :infinity) > @stats[:ma]
+		# Checking that coordinates are within pitch range
+		return false unless (0..25).include? coords[0] and (0..14).include? coords[1]
+		# Checking if player can move
+		return false unless can_move? and @team.active?
+		# Checking that target location is empty
+		return false unless @pitch[coords].nil?
+		# Checking if a path exists to x, y
+		return false if stuck?
+		return true
+	end
+
 	def cant_move!
 		@can_move = false
 		@cur_ma   = 0
@@ -62,7 +77,7 @@ module States
 	end
 
 	def on_pitch?
-		return true unless @state == :out || @state == :ko
+		return true if @state < Health::KO
 		return false
 	end
 

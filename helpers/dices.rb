@@ -24,11 +24,11 @@ module Dices
 			sum = _rand + _rand2
 			case sum
 			when 2..7
-				return :stun
+				return Health::STUN_2
 			when 8..9
-				return :ko
+				return Health::KO
 			else
-				return :out
+				return Health::DEAD
 			end
 		when :classic
 			return _rand

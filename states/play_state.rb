@@ -5,6 +5,7 @@ require "pitch/floating_text"
 require "pitch/ball"
 require "pitch/team"
 require "pitch/hud"
+require "pitch/pitch"
 
 require "player/player"
 
@@ -12,17 +13,6 @@ require "helpers/measures"
 require "helpers/barrier"
 
 module GameStates
-# Transitionnal class, we gotta handle this asap
-class Pitch
-	WIDTH       = 26
-	HEIGHT      = 15
-	SQUARE_W    = 49.7
-	SQUARE_H    = 48.8
-	SPACE_X     = 3
-	SPACE_Y     = 3
-	MARGIN_LEFT = 8
-	MARGIN_TOP  = 5
-end
 
 class PlayState < GameState
 	include Helpers::Measures
@@ -36,7 +26,7 @@ class PlayState < GameState
 		@background  = Image["pitch.jpg"]
 		@sound       = Sample["turnover.ogg"]
 
-		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => :turnover!, :escape => :show_menu, :e => :edit, :d => :debug }
+		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => :turnover!, :escape => :show_menu }
 
 		x, y  = to_screen_coords [12, 8]
 		@ball = Ball.create :pitch => self
@@ -53,7 +43,7 @@ class PlayState < GameState
 		@active_team = @teams[0]
 		@active_team.new_turn!
 
-		@hud = HUD.create :teams => @teams
+		@hud = HUD.create :teams => @teams, :pitch => self
 
 		randomize
 	end
@@ -71,12 +61,6 @@ class PlayState < GameState
 
 	def show_menu
 		push_game_state MainMenuState.new
-	end
-
-	# FIXME : this is buggy for now as we dont really care yet about chingu's convention
-	def edit
-		# state = GameStates::Edit.new(:except => [FloatingText, Ball, Player])
-		# push_game_state state, :setup => false
 	end
 
 	def debug

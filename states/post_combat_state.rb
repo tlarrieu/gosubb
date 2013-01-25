@@ -69,7 +69,7 @@ class PostCombatState < GameState
 		@pitch.hud.stick nil
 		@pitch.hud.clear
 		@pitch.hud.lock
-		@squares.each { |square| square.destroy! }
+		@squares.each { |square| square.destroy! } if @squares
 		Text.create "Do you want to follow?", :x => $window.width / 2.0 - 120, :y => 844
 
 		items = { "Yes" => :follow, "No" => :close }.sort_by { |key,value| key }
@@ -96,7 +96,9 @@ class PostCombatState < GameState
 	end
 
 	def follow
-		x, y = @defender_last_pos
+		x, y = @defender.pos
+		x, y = @defender_last_pos if @defender_last_pos
+
 		@attacker.push_to! x, y
 		close
 	end

@@ -14,7 +14,8 @@ class HUD < GameObject
 		@width  = $window.width
 		@height = 200
 
-		teams  = options[:teams]
+		teams  = options[:teams] || raise(ArgumentError, "Missing argument :teams")
+		pitch  = options[:pitch] || raise(ArgumentError, "Missing argument :pitch")
 
 		@bg = Image["hud2.png"]
 
@@ -23,8 +24,18 @@ class HUD < GameObject
 		center_x = @x + @width / 2.0
 		center_y = @y + @height / 2.0 + 20
 
-		TeamBlock.create :team => teams[0], :x => @x + 20, :y => center_y, :color => Gosu::Color::BLUE
-		TeamBlock.create :team => teams[1], :x => @x + @width - 20, :y => center_y, :color => Gosu::Color::RED, :rotation_center => :center_right
+		TeamBlock.create :team => teams[0],
+						 :x => @x + 20,
+						 :y => center_y,
+						 :color => Gosu::Color::BLUE,
+						 :pitch => pitch
+
+		TeamBlock.create :team => teams[1],
+						 :x => @x + @width - 20,
+						 :y => center_y,
+						 :color => Gosu::Color::RED,
+						 :rotation_center => :center_right,
+						 :pitch => pitch
 
 		@player_block = PlayerBlock.create :x => center_x, :y => center_y
 	end
@@ -61,8 +72,9 @@ end
 class TeamBlock < GameObject
 	def initialize options = {}
 		super
-		@team = options[:team]
-		color = options[:color] || 0xFFFFFFFF
+		@team    = options[:team]
+		@pitch   = options[:pitch]
+		color    = options[:color] || 0xFFFFFFFF
 		rot_cent = options[:rotation_center] || :center_left
 
 		a_x, a_y = rotation_center(rot_cent)
@@ -84,16 +96,20 @@ class TeamBlock < GameObject
 
 	def update
 		super
-		time = Time.at(@team.time_left / 1000)
+		time = Time.at((@team.time - @elapsed_time) / 1000)
 		nb_min = time.min
 		nb_sec = time.sec
 		nb_sec = "0#{nb_sec}" if nb_sec < 10
-		if @team.active
+		if @team.active?
 			@time.text = "#{nb_min}:#{nb_sec}"
+			if @team.time - @elapsed_time <= 0
+				@elapsed_time = 0
+				@pitch.turnover!
+			end
+			@elapsed_time += $window.milliseconds_since_last_tick
 		else
 			@time.text = ""
 		end
-		@elapsed_time += $window.milliseconds_since_last_tick
 	end
 end
 

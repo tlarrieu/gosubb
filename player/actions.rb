@@ -1,20 +1,12 @@
 
 module Actions
-	def select
-		if to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
-			@selected = true
-		else
-			@selected = false
-		end
-	end
-
-	def unselect
-		@selected = false
-	end
-
 	def blitz!
 		@blitz = true if can_blitz
 	end
+
+	# ----------------------
+	# ------- Moves --------
+	# ----------------------
 
 	def move_to! x, y
 		return false unless can_move_to?(x, y)
@@ -43,20 +35,9 @@ module Actions
 		true
 	end
 
-	def can_move_to? x, y
-		coords = [x, y]
-		# Checking that [x, y] is in movement allowance range
-		return false if dist(pos, [x,y], :infinity) > @stats[:ma]
-		# Checking that coordinates are within pitch range
-		return false unless (0..25).include? coords[0] and (0..14).include? coords[1]
-		# Checking if player can move
-		return false unless can_move? and @team == @pitch.active_team
-		# Checking that target location is empty
-		return false unless @pitch[coords].nil?
-		# Checking if a path exists to x, y
-		return false if stuck?
-		return true
-	end
+	# ----------------------
+	# ---- Ball Handling ---
+	# ----------------------
 
 	def pass target_player
 		if can_pass_to? target_player
@@ -84,6 +65,23 @@ module Actions
 		return false
 	end
 
+	def catch! modifiers=[]
+		res = roll_agility @stats[:agi], modifiers
+		if res == :success
+			@has_ball = true
+			event! :catch
+			return true
+		else
+			@ball.scatter!
+			event! :fail
+		end
+		false
+	end
+
+	# ----------------------
+	# ------- Fight --------
+	# ----------------------
+
 	def tackle target_player
 		target_player.end_turn
 	end
@@ -105,18 +103,17 @@ module Actions
 		if roll + roll > stats[:arm]
 			@state = roll :injury
 			case @state
-			when :stun
+			when Health::STUN_0, Health::STUN_1, Health::STUN_2
 				Sample["fall.ogg"].play
-			when :ko
+			when Health::KO
 				Sample["ko.ogg"].play
-			when :out
+			when Health::DEAD
 				Sample["hurt.ogg"].play
 			end
 		else
-			@state = :hit
+			@state = Health::STUN_1
 			Sample["fall.ogg"].play
 		end
-		on_state_change
 	end
 
 	def push target_player
@@ -129,18 +126,5 @@ module Actions
 		else
 			down target_player
 		end
-	end
-
-	def catch! modifiers=[]
-		res = roll_agility @stats[:agi], modifiers
-		if res == :success
-			@has_ball = true
-			event! :catch
-			return true
-		else
-			@ball.scatter!
-			event! :fail
-		end
-		false
 	end
 end

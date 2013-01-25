@@ -8,9 +8,11 @@ require 'states/combat_state'
 
 require 'pitch/square'
 require 'pitch/floating_text'
+require 'pitch/pitch'
 
 require 'player/actions'
 require 'player/states'
+require 'player/health'
 
 class Player < GameObject
 	include Helpers::Measures
@@ -29,11 +31,11 @@ class Player < GameObject
 
 	def initialize options = {}
 		super
-		@team      = options[:team]  or raise "Missing team number for #{self}"
-		@pitch     = options[:pitch] or raise "Unable to fetch pitch for #{self}"
-		@ball      = options[:ball]  or raise "Unable to find ball for #{self}"
-		@race      = options[:race] || "human"
-		@role      = options[:role] || "blitzer"
+		@team      = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
+		@pitch     = options[:pitch] or raise ArgumentError, "Unable to fetch pitch for #{self}"
+		@ball      = options[:ball]  or raise ArgumentError, "Unable to find ball for #{self}"
+		@race      = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
+		@role      = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
 		@image     = Image["teams/#{race}/#{role}#{@team.side}.gif"]
 		@x, @y     = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x  = @x
@@ -47,13 +49,24 @@ class Player < GameObject
 		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
 		@abilities = []
 		@has_ball  = options[:has_ball] or false
-		@state     = :heathy
-
+		@state     = Health::OK
 		new_turn!
 	end
 
 	def setup
 		self.input = { :mouse_left => :select }
+	end
+
+	def select
+		if to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
+			@selected = true
+		else
+			@selected = false
+		end
+	end
+
+	def unselect
+		@selected = false
 	end
 
 	def new_turn!
@@ -67,7 +80,7 @@ class Player < GameObject
 	end
 
 	def end_turn
-		if @pitch.active_team == @team
+		if @team.active?
 			@pitch.turnover!
 			cant_move!
 		end
@@ -78,8 +91,10 @@ class Player < GameObject
 	# -------------------------------
 
 	def draw
-		@square.draw if @square
-		super
+		if on_pitch?
+			@square.draw if @square
+			super
+		end
 	end
 
 	def update
@@ -87,7 +102,7 @@ class Player < GameObject
 		params = {:x => @x, :y => @y, :color => :yellow}
 		if @selected
 			@square = StateSquare.new params.merge(:color => :yellow)
-		elsif @team == @pitch.active_team
+		elsif @team.active?
 			if can_move?
 				@square = StateSquare.new params.merge(:color => :green)
 			else
@@ -125,6 +140,12 @@ class Player < GameObject
 			if [tx, ty] == t_pos
 				success = true
 				success = catch! if @ball.pos == @path[@cur_node] unless @has_ball
+				if has_ball?
+					x, y = @path[@cur_node]
+					if (@team.side == :A and y == Pitch::WIDTH - 1) or (@team.side == :B and y == 0)
+						@team.inc :score
+					end
+				end
 				unless success
 					@cur_node = @path.size
 				else
@@ -132,6 +153,7 @@ class Player < GameObject
 				end
 				@cur_ma   -= 1
 				@footsteps.play
+
 			end
 
 			@x, @y = tx, ty
@@ -177,20 +199,7 @@ class Player < GameObject
 		end_turn unless success
 	end
 
-
-
-
 	# -------------------------------
 	# ---------- Listeners ----------
 	# -------------------------------
-
-	private
-	def on_state_change
-		case @state
-		when :out
-			@team.kill self
-		when :ko
-			@team.knock_out self
-		end
-	end
 end

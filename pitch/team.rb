@@ -3,7 +3,7 @@ include Gosu
 include Chingu
 
 class Team
-	attr_accessor :time_left, :active
+	attr_accessor :time, :active
 	attr_reader   :side
 
 	def initialize options = {}
@@ -16,14 +16,11 @@ class Team
 		@side   = options[:side] || :A
 
 		@players = []
-		@kos     = []
-		@dead    = []
 
 		@turn_listeners  = []
 		@score_listeners = []
 
-		@time_left = 0
-
+		@time  = 240_000
 		@turns = 0
 
 		new_period!
@@ -33,28 +30,8 @@ class Team
 		@players << player
 	end
 
-	def kill player
-		if @players.include? player
-			@dead << @players.delete(player)
-			player.destroy!
-		end
-	end
-
-	def knock_out player
-		if @players.include? player
-			@kos << @players.delete(player)
-			player.destroy!
-		end
-	end
-
-	def wake_up player
-		if @kos.include? player
-			@players << @kos.delete(player)
-		end
-	end
-
 	def [] pos
-		@players.each { |p| return p if p.pos == pos}
+		@players.each { |p| return p if p.pos == pos and p.on_pitch? }
 		nil
 	end
 
@@ -62,12 +39,21 @@ class Team
 		@players.each { |p| yield p }
 	end
 
+	def new_period!
+		@points = 0
+		@turn   = 0
+		@blitz  = false
+	end
+
 	def new_turn!
 		@players.each { |p| p.new_turn! }
 		@active = true
-		@time_left = 240_000
 		inc :turn
 		@blitz     = false
+	end
+
+	def end_turn!
+		@pitch.turnover!
 	end
 
 	def blitz!
@@ -76,18 +62,6 @@ class Team
 
 	def blitz?
 		@blitz
-	end
-
-	def update
-		if @time_left > 0
-			@time_left -= $window.milliseconds_since_last_tick
-		end
-	end
-
-	def new_period!
-		@points = 0
-		@turn   = 0
-		@blitz  = false
 	end
 
 	def inc symb
@@ -107,6 +81,10 @@ class Team
 
 	def turn
 		@turn
+	end
+
+	def active?
+		@active
 	end
 
 	# ---------- Listeners ----------
