@@ -1,9 +1,5 @@
 
 module Actions
-	def blitz!
-		@blitz = true if can_blitz
-	end
-
 	# ----------------------
 	# ------- Moves --------
 	# ----------------------
@@ -33,6 +29,26 @@ module Actions
 
 		@pitch.lock
 		true
+	end
+
+	def stand_up!
+		if @health == Health::STUN_0
+			@health = Health::OK
+			@cur_ma -= 3
+			notify_health_change
+			true
+		else
+			false
+		end
+	end
+
+	def blitz!
+		if can_blitz?
+			@blitz = true
+			true
+		else
+			false
+		end
 	end
 
 	# ----------------------
@@ -101,9 +117,9 @@ module Actions
 
 	def injure!
 		if roll + roll > stats[:arm]
-			@state = roll :injury
-			case @state
-			when Health::STUN_0, Health::STUN_1, Health::STUN_2
+			@health = roll :injury
+			case @health
+			when Health::STUN_0..Health::STUN_2
 				Sample["fall.ogg"].play
 			when Health::KO
 				Sample["ko.ogg"].play
@@ -111,9 +127,10 @@ module Actions
 				Sample["hurt.ogg"].play
 			end
 		else
-			@state = Health::STUN_1
+			@health = Health::STUN_1
 			Sample["fall.ogg"].play
 		end
+		notify_health_change
 	end
 
 	def push target_player

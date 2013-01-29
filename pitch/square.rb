@@ -11,8 +11,17 @@ class Square < GameObject
 	@@color = :green
 
 	def initialize options={}
-		@type = options.delete(:type) || @@type
-		@color = options.delete(:color) || @@color
+		options = {:type => @@type, :color => @@color}.merge(options)
+		config options
+		options.delete(:color)
+		super
+	end
+
+	def config options = {}
+		@x     = options[:x]     || @x
+		@y     = options[:y]     || @y
+		@type  = options[:type]  || @type
+		@color = options[:color] || @color
 
 		valid_types = [:state, :square]
 		raise ArgumentError, "Wrong type #{@type}" unless valid_types.include? @type
@@ -20,7 +29,6 @@ class Square < GameObject
 		raise ArgumentError, "Wrong color #{@color}" unless valid_colors[@type].include? @color
 
 		@image = Image["#{@type}-#{@color}.png"]
-		super
 	end
 end
 

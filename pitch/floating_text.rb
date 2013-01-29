@@ -14,7 +14,7 @@ class FloatingText < Chingu::Text
 
 		options = {:timer => 1000}.merge(options)
 		@x -= width / 2.0
-		after(options[:timer]) { self.destroy! }
+		after(options[:timer]) { self.destroy! } if options[:timer] and options[:timer] > 0
 	end
 
 	def draw

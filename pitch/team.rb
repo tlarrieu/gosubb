@@ -15,6 +15,8 @@ class Team
 
 		@side   = options[:side] || :A
 
+		@pitch  = options[:pitch] || raise(ArgumentError, "You did not specify a pitch for #{self}")
+
 		@players = []
 
 		@turn_listeners  = []
@@ -46,14 +48,16 @@ class Team
 	end
 
 	def new_turn!
-		@players.each { |p| p.new_turn! }
 		@active = true
+		@players.each { |p| p.new_turn! }
 		inc :turn
 		@blitz     = false
 	end
 
 	def end_turn!
-		@pitch.turnover!
+		if active?
+			@pitch.turnover!
+		end
 	end
 
 	def blitz!
@@ -85,6 +89,11 @@ class Team
 
 	def active?
 		@active
+	end
+
+	def active= b
+		@active = b
+		@players.each { |p| p.notify_ring_change }
 	end
 
 	# ---------- Listeners ----------

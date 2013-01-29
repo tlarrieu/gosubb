@@ -22,7 +22,7 @@ class Player < GameObject
 	include States
 
 	traits :bounding_circle
-	attr_reader :team, :cur_ma, :stats, :race, :role, :state
+	attr_reader :team, :cur_ma, :stats, :race, :role, :health
 
 	@@str = 3
 	@@agi = 2
@@ -31,25 +31,26 @@ class Player < GameObject
 
 	def initialize options = {}
 		super
-		@team      = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
-		@pitch     = options[:pitch] or raise ArgumentError, "Unable to fetch pitch for #{self}"
-		@ball      = options[:ball]  or raise ArgumentError, "Unable to find ball for #{self}"
-		@race      = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
-		@role      = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
-		@image     = Image["teams/#{race}/#{role}#{@team.side}.gif"]
-		@x, @y     = to_screen_coords [options[:x], options[:y]] rescue nil
-		@target_x  = @x
-		@target_y  = @y
-		@velocity  = 0.23
+		@team       = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
+		@pitch      = options[:pitch] or raise ArgumentError, "Unable to fetch pitch for #{self}"
+		@ball       = options[:ball]  or raise ArgumentError, "Unable to find ball for #{self}"
+		@race       = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
+		@role       = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
+		@image      = Image["teams/#{race}/#{role}#{@team.side}.gif"]
+		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
+		@target_x   = @x
+		@target_y   = @y
+		@velocity   = 0.23
 
-		@footsteps = Sample["footsteps.ogg"]
+		@footsteps  = Sample["footsteps.ogg"]
 
-		@selected  = false
+		@selected   = false
 
-		@stats     = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
-		@abilities = []
-		@has_ball  = options[:has_ball] or false
-		@state     = Health::OK
+		@stats      = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
+		@abilities  = []
+		@has_ball   = options[:has_ball] or false
+		@health     = Health::OK
+		@health_txt = FloatingText.create("", :x => @x + 5, :y => @y + 5, :timer => 0, :color => 0xFFFF0000)
 		new_turn!
 	end
 
@@ -63,10 +64,12 @@ class Player < GameObject
 		else
 			@selected = false
 		end
+		notify_ring_change
 	end
 
 	def unselect
 		@selected = false
+		notify_ring_change
 	end
 
 	def new_turn!
@@ -76,14 +79,16 @@ class Player < GameObject
 		@cur_node  = 0
 		@path      = nil
 		@blitz     = false
+		notify_ring_change
 		# Later we will have to manage injuries recovery down there
+		if (Health::STUN_1..Health::STUN_2).member? @health
+			@health -= 1
+			notify_health_change
+		end
 	end
 
 	def end_turn
-		if @team.active?
-			@pitch.turnover!
-			cant_move!
-		end
+		@team.end_turn!
 	end
 
 	# -------------------------------
@@ -99,19 +104,6 @@ class Player < GameObject
 
 	def update
 		super
-		params = {:x => @x, :y => @y, :color => :yellow}
-		if @selected
-			@square = StateSquare.new params.merge(:color => :yellow)
-		elsif @team.active?
-			if can_move?
-				@square = StateSquare.new params.merge(:color => :green)
-			else
-				@square = StateSquare.new params.merge(:color => :red)
-			end
-		else
-			@square = nil
-		end
-
 		unless @path.nil?
 			ms = $window.milliseconds_since_last_tick rescue nil
 
@@ -153,7 +145,6 @@ class Player < GameObject
 				end
 				@cur_ma   -= 1
 				@footsteps.play
-
 			end
 
 			@x, @y = tx, ty
@@ -165,6 +156,8 @@ class Player < GameObject
 			end
 
 			cant_move! if @cur_ma == 0 and not @blitz and not @has_ball
+			notify_ring_change
+			notify_health_change
 		end
 	end
 
@@ -202,4 +195,39 @@ class Player < GameObject
 	# -------------------------------
 	# ---------- Listeners ----------
 	# -------------------------------
+
+	def notify_health_change
+		@health_txt.color = case @health - 1
+		when 2
+			0xFFFF0000
+		when 1
+			0xFFE96900
+		when 0
+			0xFF00FF00
+		else
+			0xFFFFFFFF
+		end
+			@health_txt.x    = @x + 5
+			@health_txt.y    = @y + 5
+		if (Health::STUN_0..Health::STUN_2).member? @health
+			@health_txt.text = "#{@health - 1}"
+		else
+			@health_txt.text = ""
+		end
+	end
+
+	def notify_ring_change
+		params = {:x => @x, :y => @y, :color => :yellow}
+		if @selected
+			@square = StateSquare.new params.merge(:color => :yellow)
+		elsif @team.active?
+			if can_move?
+				@square = StateSquare.new params.merge(:color => :green)
+			else
+				@square = StateSquare.new params.merge(:color => :red)
+			end
+		else
+			@square = nil
+		end
+	end
 end

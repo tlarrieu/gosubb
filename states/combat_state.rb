@@ -22,12 +22,13 @@ class CombatState < GameState
 		@defender = options[:defender]
 		@pitch    = options[:pitch]
 		diff = (@attacker.stats[:str] - @defender.stats[:str]).abs
-		lowest = [@attacker.stats[:str], @defender.stats[:str]].min
-		nb_dices = if diff >= 3 * lowest
+		highest = [@attacker.stats[:str], @defender.stats[:str]].max
+		lowest  = [@attacker.stats[:str], @defender.stats[:str]].min
+		nb_dices = if highest >= 3 * lowest
 			4
-		elsif diff >= 2 * lowest
+		elsif highest >= 2 * lowest
 			3
-		elsif diff > lowest
+		elsif highest > lowest
 			2
 		else
 			1

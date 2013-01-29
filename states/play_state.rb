@@ -38,8 +38,8 @@ class PlayState < GameState
 		@last_selected = nil
 
 		@teams = []
-		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A )
-		@teams << Team.new( :name => "OTAILLO", :side => :B )
+		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
+		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
 		@active_team = @teams[0]
 		@active_team.new_turn!
 
@@ -53,10 +53,6 @@ class PlayState < GameState
 		# Here we force refresh of the movemement allowance
 		# we do that to fix a glitch occuring when leaving dice menu state
 		show_movement
-	end
-
-	def finalize
-		$window.change_cursor :normal
 	end
 
 	def show_menu
@@ -151,17 +147,16 @@ class PlayState < GameState
 			x, y = to_pitch_coords [$window.mouse_x, $window.mouse_y]
 			unless @selected.nil?
 				unless @action_coords == [x,y]
-					if @selected.can_move_to? x, y
-						show_path x, y
-					elsif @selected.can_pass_to? self[[x,y]] or @selected.can_block? self[[x,y]]
-						@action_coords = [x,y]
-					elsif @selected == self[[x,y]]
-						@selected.blitz!
-					end
+					show_path x, y if @selected.can_move_to? x, y
+					@action_coords = [x, y]
 				else
 					if @selected.move_to! x, y or @selected.pass self[[x,y]] or @selected.block self[[x,y]]
 						MovementSquare.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
+					elsif @action_coords == @selected.pos
+						if @selected.stand_up! or @selected. blitz!
+							@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
+						end
 					end
 					@action_coords = nil
 				end
@@ -181,7 +176,11 @@ class PlayState < GameState
 					w, color = 0, :green
 				end
 			else
-				w, color = 1, :gray
+				if @selected.health == Health::OK
+					w, color = 1, :gray
+				else
+					w, color = 0, :gray
+				end
 			end
 
 			p_rect = Rect.new 1, 1, Pitch::WIDTH - 2, Pitch::HEIGHT - 2

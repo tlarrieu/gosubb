@@ -11,7 +11,7 @@ module States
 	end
 
 	def can_move?
-		@can_move
+		@can_move and @health == Health::OK
 	end
 
 	def can_move_to? x, y
@@ -32,6 +32,7 @@ module States
 	def cant_move!
 		@can_move = false
 		@cur_ma   = 0
+		notify_ring_change
 	end
 
 	def has_moved?
@@ -57,7 +58,7 @@ module States
 
 	# FIXME : the following condition is not enough, we are missing some cases
 	def can_pass_to? target_player
-		@can_move and @has_ball and target_player and target_player != self  and target_player.team == @team
+		can_move? and @has_ball and target_player and target_player != self  and target_player.team == @team
 	end
 
 	def close_to? player
@@ -65,7 +66,7 @@ module States
 	end
 
 	def can_block? target_player
-		((@can_move and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and close_to?(target_player)
+		((can_move? and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and close_to?(target_player)
 	end
 
 	def has_ball?
@@ -73,11 +74,11 @@ module States
 	end
 
 	def can_blitz?
-		not @team.blitz?
+		not @team.blitz? and can_move?
 	end
 
 	def on_pitch?
-		return true if @state < Health::KO
+		return true if @health < Health::KO
 		return false
 	end
 
