@@ -1,4 +1,3 @@
-
 class Health
 	OK      = 0 # Good shape
 	STUN_0  = 1 # Ready to stand up

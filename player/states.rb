@@ -23,7 +23,7 @@ module States
 		# Checking if player can move
 		return false unless can_move? and @team.active?
 		# Checking that target location is empty
-		return false unless @pitch[coords].nil?
+		return false if @pitch[coords]
 		# Checking if a path exists to x, y
 		return false if stuck?
 		return true
@@ -66,7 +66,7 @@ module States
 	end
 
 	def can_block? target_player
-		((can_move? and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and close_to?(target_player)
+		((can_move? and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and target_player.health == Health::OK and close_to?(target_player)
 	end
 
 	def has_ball?

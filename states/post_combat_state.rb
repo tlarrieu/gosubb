@@ -16,7 +16,6 @@ class PostCombatState < GameState
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
-		@pitch    = options[:pitch]
 
 		push      = options[:push] || true
 
@@ -52,6 +51,7 @@ class PostCombatState < GameState
 	def draw
 		super
 		previous_game_state.draw
+		if @menu then $window.fill_rect([0, 0, $window.width, $window.height], 0xAA000000, 200) end
 	end
 
 	def click
@@ -66,16 +66,13 @@ class PostCombatState < GameState
 	end
 
 	def show_menu
-		@pitch.hud.stick nil
-		@pitch.hud.clear
-		@pitch.hud.lock
 		@squares.each { |square| square.destroy! } if @squares
-		Text.create "Do you want to follow?", :x => $window.width / 2.0 - 120, :y => 844
+		Text.create "Do you want to follow?", :x => $window.width / 2.0 - 120, :y => $window.height / 2.0 + 40, :zorder => 205
 
 		items = { "Yes" => :follow, "No" => :close }.sort_by { |key,value| key }
 		@menu = Menu.create :menu_items => items,
 		                    :x => $window.width / 2.0,
-		                    :y => 900,
+		                    :y => $window.height / 2.0,
 		                    :zorder => 200,
 		                    :select_color => 0xFF0056D6,
 		                    :unselect_color => 0xFFFFFFFF,
@@ -88,11 +85,6 @@ class PostCombatState < GameState
 		                    :font => "media/fonts/averia_rg.ttf",
 		                    :font_size => 35,
 		                    :orientation => :horizontal
-	end
-
-	def close
-		super
-		@pitch.hud.unlock
 	end
 
 	def follow

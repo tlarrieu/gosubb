@@ -129,15 +129,17 @@ class Menu < BasicGameObject
 		i = 0
 		# This should be done with :bounding_box trait but I cant seem
 		# to add a trait to items for some reasons
-		@items.each do |item|
-			y = $window.mouse_y
-			x = $window.mouse_x
-			if item.x - item.width / 2.0 <= x and item.x +  item.width / 2.0 >= x
-				if item.y - item.height / 2.0 <= y and item.y +  item.height / 2.0 >= y
-					step(i - @selected) if @selected != i
+		if $window
+			@items.each do |item|
+				y = $window.mouse_y
+				x = $window.mouse_x
+				if item.x - item.width / 2.0 <= x and item.x +  item.width / 2.0 >= x
+					if item.y - item.height / 2.0 <= y and item.y +  item.height / 2.0 >= y
+						step(i - @selected) if @selected != i
+					end
 				end
+				i += 1
 			end
-			i += 1
 		end
 	end
 

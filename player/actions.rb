@@ -27,12 +27,15 @@ module Actions
 		@path     = [[x, y]]
 		@cur_node = 0
 
+		@untackleable = true
+
 		@pitch.lock
 		true
 	end
 
 	def stand_up!
 		if @health == Health::STUN_0
+			@has_moved = true
 			@health = Health::OK
 			@cur_ma -= 3
 			notify_health_change
@@ -94,12 +97,19 @@ module Actions
 		false
 	end
 
+	def lose_ball
+		if has_ball?
+			@ball.scatter!
+			@has_ball = false
+		end
+	end
+
 	# ----------------------
 	# ------- Fight --------
 	# ----------------------
 
-	def tackle target_player
-		target_player.end_turn
+	def tackle
+		end_turn
 	end
 
 	def block target_player
@@ -111,7 +121,7 @@ module Actions
 	end
 
 	def down target_player
-		target_player.end_turn if target_player.team == @pitch.active_team
+		target_player.end_turn
 		target_player.injure!
 	end
 
@@ -130,6 +140,7 @@ module Actions
 			@health = Health::STUN_1
 			Sample["fall.ogg"].play
 		end
+		lose_ball
 		notify_health_change
 	end
 

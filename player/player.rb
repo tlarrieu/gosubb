@@ -80,7 +80,7 @@ class Player < GameObject
 		@path      = nil
 		@blitz     = false
 		notify_ring_change
-		# Later we will have to manage injuries recovery down there
+
 		if (Health::STUN_1..Health::STUN_2).member? @health
 			@health -= 1
 			notify_health_change
@@ -90,10 +90,6 @@ class Player < GameObject
 	def end_turn
 		@team.end_turn!
 	end
-
-	# -------------------------------
-	# ----------- Graphic -----------
-	# -------------------------------
 
 	def draw
 		if on_pitch?
@@ -109,6 +105,22 @@ class Player < GameObject
 
 			t_pos = to_screen_coords @path[@cur_node]
 			c_pos = [@x, @y]
+
+			unless @has_left_square or @untackleable
+				@has_left_square = true
+				count = 0
+				@pitch.active_players_around(pos).each { |p| count += 1 if p.team != @team }
+				if count > 0
+					unless roll_agility(@stats[:agi]) == :success
+						injure!
+						@has_left_square = false
+						@path = nil
+						end_turn
+						@pitch.unlock
+						return nil
+					end
+				end
+			end
 
 			vx, vy = 0, 0
 
@@ -130,13 +142,12 @@ class Player < GameObject
 			end
 
 			if [tx, ty] == t_pos
+				@has_left_square = false
 				success = true
 				success = catch! if @ball.pos == @path[@cur_node] unless @has_ball
 				if has_ball?
 					x, y = @path[@cur_node]
-					if (@team.side == :A and y == Pitch::WIDTH - 1) or (@team.side == :B and y == 0)
-						@team.inc :score
-					end
+					@team.inc :score if (@team.side == :A and x == Pitch::WIDTH - 1) or (@team.side == :B and x == 0)
 				end
 				unless success
 					@cur_node = @path.size
@@ -160,10 +171,6 @@ class Player < GameObject
 			notify_health_change
 		end
 	end
-
-	# -------------------------------
-	# ----------- Actions -----------
-	# -------------------------------
 
 	def event! symb
 		msg = ""
@@ -192,10 +199,6 @@ class Player < GameObject
 		end_turn unless success
 	end
 
-	# -------------------------------
-	# ---------- Listeners ----------
-	# -------------------------------
-
 	def notify_health_change
 		@health_txt.color = case @health - 1
 		when 2
@@ -221,7 +224,7 @@ class Player < GameObject
 		if @selected
 			@square = StateSquare.new params.merge(:color => :yellow)
 		elsif @team.active?
-			if can_move?
+			if @can_move
 				@square = StateSquare.new params.merge(:color => :green)
 			else
 				@square = StateSquare.new params.merge(:color => :red)

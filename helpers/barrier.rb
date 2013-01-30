@@ -1,4 +1,4 @@
-
+module Helpers
 module Barrier
 	def lock
 		@barrier = 0 unless @barrier
@@ -13,4 +13,5 @@ module Barrier
 	def unlocked? &block
 		block.call if @barrier == 0 or @barrier.nil?
 	end
+end
 end

@@ -16,20 +16,21 @@ module GameStates
 
 class PlayState < GameState
 	include Helpers::Measures
-	include Barrier
+	include Helpers::Barrier
 
-	attr_accessor :active_team, :teams
-	attr_reader   :selected, :hud
+	attr_reader :teams
 
 	def initialize
 		super
-		@background  = Image["pitch.jpg"]
 		@sound       = Sample["turnover.ogg"]
 
-		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => :turnover!, :escape => :show_menu }
+		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => lambda{ @pitch.turnover! }, :escape => :show_menu }
+
+		@pitch = Pitch.create
+		@pitch.on_unlock { show_movement }
 
 		x, y  = to_screen_coords [12, 8]
-		@ball = Ball.create :pitch => self
+		@ball = Ball.create :pitch => @pitch
 		@ball.set_pos! x, y, false
 
 		@action_coords = nil
@@ -37,13 +38,7 @@ class PlayState < GameState
 		@selected      = nil
 		@last_selected = nil
 
-		@teams = []
-		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
-		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
-		@active_team = @teams[0]
-		@active_team.new_turn!
-
-		@hud = HUD.create :teams => @teams, :pitch => self
+		@hud = HUD.create :teams => @pitch.teams, :pitch => @pitch
 
 		randomize
 	end
@@ -68,37 +63,15 @@ class PlayState < GameState
 		@selected = nil
 		@hud.stick nil
 		@hud.clear
-		@turnover = false
 
 		MovementSquare.destroy_all
 
-		@active_team.active = false
-		case @active_team
-		when @teams[0]
-			@active_team = @teams[1]
-		when @teams[1]
-			@active_team = @teams[0]
-		end
-		@active_team.new_turn!
+		@pitch.new_turn!
 	end
 
-
-	def turnover!
-		@turnover = true
-	end
-
-	def turnover?
-		@turnover
-	end
-
-	def [] pos
-		@teams.each { |t| return t[pos] unless t[pos].paused? if t[pos]}
-		nil
-	end
-
-	def draw
+	def unlock
 		super
-		@background.draw 0,0,0
+		show_movement
 	end
 
 	def update
@@ -108,7 +81,7 @@ class PlayState < GameState
 
 		# HUD update
 		found = false
-		@teams.each do |t|
+		@pitch.teams.each do |t|
 			t.each do |p|
 				if p.collision_at? $window.mouse_x, $window.mouse_y
 					@hud.show p
@@ -119,12 +92,12 @@ class PlayState < GameState
 		@hud.clear unless found
 
 		# Turnover
-		if turnover?
-			unlocked? do
+		if @pitch.turnover?
+			@pitch.unlocked? do
 				new_turn!
 				Sample["turnover.ogg"].play 0.3
 				@text = FloatingText.create "Turnover !",
-				                            :x => @background.width / 2.0,
+				                            :x => @pitch.width / 2.0,
 				                            :y => $window.height - 100,
 				                            :timer => 3000,
 				                            :color => 0xFFFF0000,
@@ -136,21 +109,21 @@ class PlayState < GameState
 	def select
 		pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
 		@last_selected = @selected if @selected
-		@selected      = self[pos]
+		@selected      = @pitch[pos]
 		@action_coords = nil
 		show_movement
 		@hud.stick @selected
 	end
 
 	def action
-		unlocked? do
+		@pitch.unlocked? do
 			x, y = to_pitch_coords [$window.mouse_x, $window.mouse_y]
 			unless @selected.nil?
 				unless @action_coords == [x,y]
 					show_path x, y if @selected.can_move_to? x, y
 					@action_coords = [x, y]
 				else
-					if @selected.move_to! x, y or @selected.pass self[[x,y]] or @selected.block self[[x,y]]
+					if @selected.move_to! x, y or @selected.pass @pitch[[x,y]] or @selected.block @pitch[[x,y]]
 						MovementSquare.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
 					elsif @action_coords == @selected.pos
@@ -159,6 +132,7 @@ class PlayState < GameState
 						end
 					end
 					@action_coords = nil
+					show_movement
 				end
 			end
 		end
@@ -169,7 +143,7 @@ class PlayState < GameState
 	def show_movement
 		MovementSquare.destroy_all
 		unless @selected.nil? or @selected.moving?
-			if @selected.team == @active_team
+			if @selected.team == @pitch.active_team
 				if @selected.can_move?
 					w, color = @selected.cur_ma, :green
 				else
@@ -188,7 +162,7 @@ class PlayState < GameState
 				(-w..w).each do |j|
 					x, y   = [@selected.pos, [i,j]].transpose.map { |c| c.reduce(:+)}
 					c_rect = Rect.new x, y, 1, 1
-					if self[[x,y]].nil? and p_rect.collide_rect? c_rect
+					if @pitch[[x,y]].nil? and p_rect.collide_rect? c_rect
 						x, y = to_screen_coords [x,y]
 						MovementSquare.create( :x => x, :y => y, :color => color, :alpha => 180 )
 					end
@@ -199,7 +173,7 @@ class PlayState < GameState
 
 	def show_path x, y
 		MovementSquare.destroy_all
-		path = a_star self, @selected.pos, [x,y]
+		path = a_star @pitch, @selected.pos, [x,y]
 		if path.length <= @selected.cur_ma
 			path.each do |p|
 				i, j = to_screen_coords p
@@ -220,14 +194,14 @@ class PlayState < GameState
 				x   = rand(Pitch::WIDTH / 2)
 				y   = rand(Pitch::HEIGHT)
 				pos = [x, y]
-				if self[pos].nil?
+				if @pitch[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					@teams[0] << Player.create(
-					                      :team => @teams[0],
+					@pitch.teams[0] << Player.create(
+					                      :team => @pitch.teams[0],
 					                      :x => x,
 					                      :y => y,
 					                      :has_ball => has_ball,
-					                      :pitch => self,
+					                      :pitch => @pitch,
 					                      :ball => @ball,
 					                      :race => race,
 					                      :role => role,
@@ -244,14 +218,14 @@ class PlayState < GameState
 				x   = rand(Pitch::WIDTH / 2) + Pitch::WIDTH / 2
 				y   = rand(Pitch::HEIGHT)
 				pos = [x, y]
-				if self[pos].nil?
+				if @pitch[pos].nil?
 					has_ball = @ball.pos == [x,y]
-					@teams[1] << Player.create(
-					                      :team => @teams[1],
+					@pitch.teams[1] << Player.create(
+					                      :team => @pitch.teams[1],
 					                      :x => x,
 					                      :y => y,
 					                      :has_ball => has_ball,
-					                      :pitch => self,
+					                      :pitch => @pitch,
 					                      :ball => @ball,
 					                      :race => race,
 					                      :role => role

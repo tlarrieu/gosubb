@@ -114,7 +114,7 @@ class TeamBlock < GameObject
 end
 
 class PlayerBlock < GameObject
-	include Barrier
+	include Helpers::Barrier
 
 	def initialize options = {}
 		super options.merge( { :rotation_center => :center_center } )

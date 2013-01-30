@@ -6,7 +6,6 @@ module Dices
 		_rand = 1 + rand(6)
 		case type
 		when :block
-
 			case _rand
 				when 1
 					return :attacker_down

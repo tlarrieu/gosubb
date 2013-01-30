@@ -16,11 +16,9 @@ class CombatState < GameState
 	def initialize options = {}
 		super
 		self.input = { :mouse_left => :click }
-		@color = 0xAA000000
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
-		@pitch    = options[:pitch]
 		diff = (@attacker.stats[:str] - @defender.stats[:str]).abs
 		highest = [@attacker.stats[:str], @defender.stats[:str]].max
 		lowest  = [@attacker.stats[:str], @defender.stats[:str]].min
@@ -46,7 +44,6 @@ class CombatState < GameState
 			                            :zorder => 201,
 			                            :defender => @defender,
 			                            :attacker => @attacker,
-			                            :pitch => @pitch
 			                           )
 			x += 50
 		end
@@ -66,7 +63,7 @@ class CombatState < GameState
 	def draw
 		super
 		previous_game_state.draw
-		$window.fill_rect([0, 0, $window.width, $window.height], @color, 200)
+		$window.fill_rect([0, 0, $window.width, $window.height], 0xAA000000, 200)
 	end
 
 	def click
@@ -90,7 +87,6 @@ class DiceObject < GameObject
 		@value    = options.delete(:value)
 		@attacker = options.delete(:attacker)
 		@defender = options.delete(:defender)
-		@pitch    = options.delete(:pitch)
 
 		super({:image => dice_image(@value)}.merge(options))
 	end
@@ -116,7 +112,7 @@ class DiceObject < GameObject
 		parent.close
 		if push
 			unless @defender.paused
-				parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender, :pitch => @pitch
+				parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender
 			end
 		end
 	end

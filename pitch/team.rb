@@ -55,9 +55,7 @@ class Team
 	end
 
 	def end_turn!
-		if active?
-			@pitch.turnover!
-		end
+		@pitch.turnover! if active?
 	end
 
 	def blitz!
@@ -94,6 +92,11 @@ class Team
 	def active= b
 		@active = b
 		@players.each { |p| p.notify_ring_change }
+	end
+
+	def number
+		return 0 if @side == :A
+		1
 	end
 
 	# ---------- Listeners ----------
