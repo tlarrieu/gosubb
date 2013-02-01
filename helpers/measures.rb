@@ -1,15 +1,14 @@
 module Helpers
-
 module Measures
 	def to_pitch_coords coords
 		x = (coords[0] - Pitch::MARGIN_LEFT) / (Pitch::SQUARE_W + Pitch::SPACE_X)
-		y = (coords[1] - Pitch::MARGIN_TOP) / (Pitch::SQUARE_H + Pitch::SPACE_Y)
+		y = (coords[1] - Pitch::MARGIN_TOP - 15) / (Pitch::SQUARE_H + Pitch::SPACE_Y)
 		[x.floor, y.floor]
 	end
 
 	def to_screen_coords coords
 		x = coords[0] * (Pitch::SQUARE_W + Pitch::SPACE_X) + Pitch::MARGIN_LEFT + Pitch::SQUARE_W / 2
-		y = coords[1] * (Pitch::SQUARE_H + Pitch::SPACE_Y) + Pitch::MARGIN_TOP + Pitch::SQUARE_H / 2
+		y = coords[1] * (Pitch::SQUARE_H + Pitch::SPACE_Y) + Pitch::MARGIN_TOP + Pitch::SQUARE_H / 2 + 15
 		[x, y]
 	end
 
@@ -88,7 +87,7 @@ module Measures
 							if better then
 								came_from[y] = x
 								g_score[y]   = g
-								h_score[y]   = dist y, goal, :manhattan #heuristic estimate of distance (y, coords)
+								h_score[y]   = dist y, goal, :manhattan # heuristic estimate of distance (y, coords)
 								f_score[y]   = g_score[y] + h_score[y]
 							end
 						end
@@ -108,5 +107,4 @@ module Measures
 		return path.reverse
 	end
 end
-
 end

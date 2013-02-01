@@ -1,14 +1,17 @@
 #!/usr/bin/ruby
+$: << File.expand_path(File.dirname(__FILE__))
+$: << File.join(File.expand_path(File.dirname(__FILE__)), "helpers")
+$: << File.join(File.expand_path(File.dirname(__FILE__)), "shared")
+$: << File.join(File.expand_path(File.dirname(__FILE__)), "states")
+puts $:
+
 require 'rubygems'
 require 'chingu'
 include Gosu
 include Chingu
 
-local = File.expand_path File.dirname(__FILE__)
-$LOAD_PATH.unshift local unless $LOAD_PATH.include? local
-
-require "pitch/floating_text"
-require "states/play_state"
+require "floating_text"
+require "play_state"
 
 include GameStates
 
@@ -20,9 +23,8 @@ class Game < Window
 		self.input   = { :q => :close }
 		self.cursor  = false
 		self.factor  = 1
-		#self.volume = 0.8
 
-		@fps = FPSText.create "fps", :x => 15, :y => 10, :zorder => 1000
+		FPSText.create "fps", :x => 15, :y => 25, :zorder => 1000
 
 		change_cursor :normal
 

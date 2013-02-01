@@ -1,5 +1,4 @@
 module Helpers
-
 module Dices
 	def roll type=:classic
 		Sample["dice.ogg"].play 0.2
@@ -56,5 +55,4 @@ module Dices
 		return res
 	end
 end
-
 end

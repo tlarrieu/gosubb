@@ -1,16 +1,12 @@
-require "states/combat_state"
-require "states/main_menu_state"
+require "combat_state"
+require "main_menu_state"
 
-require "pitch/floating_text"
-require "pitch/ball"
-require "pitch/team"
-require "pitch/hud"
-require "pitch/pitch"
-
-require "player/player"
-
-require "helpers/measures"
-require "helpers/barrier"
+require "measures"
+require "barrier"
+require "pitch"
+require "ball"
+require "player"
+require "hud"
 
 module GameStates
 
@@ -187,15 +183,16 @@ class PlayState < GameState
 		roles = { :human => ["lineman", "blitzer", "catcher", "thrower"], :orc => ["lineman", "blitzer", "thrower"] }
 		races = [:human, :orc]
 
+		positions = [[3,6], [3,8], [7,5], [7,9], [10,1], [10, 13], [12,3], [12,6], [12,7], [12,8], [12,11]]
+
 		race = races.sample
-		1.upto(11) do
+		0.upto(10) do |i|
 			role = roles[race].sample
 			loop do
-				x   = rand(Pitch::WIDTH / 2)
-				y   = rand(Pitch::HEIGHT)
+				x, y = positions[i]
 				pos = [x, y]
-				if @pitch[pos].nil?
-					has_ball = @ball.pos == [x,y]
+				unless @pitch[pos]
+					has_ball = @ball.pos == pos
 					@pitch.teams[0] << Player.create(
 					                      :team => @pitch.teams[0],
 					                      :x => x,
@@ -212,14 +209,14 @@ class PlayState < GameState
 		end
 
 		race = races.sample
-		1.upto(11) do
+		0.upto(10) do |i|
 			role = roles[race].sample
 			loop do
-				x   = rand(Pitch::WIDTH / 2) + Pitch::WIDTH / 2
-				y   = rand(Pitch::HEIGHT)
+				x, y = positions[i]
+				x = Pitch::WIDTH - x - 1
 				pos = [x, y]
-				if @pitch[pos].nil?
-					has_ball = @ball.pos == [x,y]
+				unless @pitch[pos]
+					has_ball = @ball.pos == pos
 					@pitch.teams[1] << Player.create(
 					                      :team => @pitch.teams[1],
 					                      :x => x,

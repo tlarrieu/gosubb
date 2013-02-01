@@ -3,7 +3,6 @@ include Chingu
 include Gosu
 
 require "helpers/measures"
-require "pitch/square"
 
 module GameStates
 
