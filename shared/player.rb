@@ -20,11 +20,6 @@ class Player < GameObject
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :race, :role, :health
 
-	@@str = 3
-	@@agi = 2
-	@@ma  = 4
-	@@arm = 6
-
 	def initialize options = {}
 		super
 		@team       = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
@@ -42,8 +37,8 @@ class Player < GameObject
 
 		@selected   = false
 
-		@stats      = {:str => @@str + rand(2), :agi => @@agi + rand(2), :ma => @@ma + rand(2), :arm => @@arm + rand(2)}
-		@abilities  = []
+		@stats      = options[:stats] or raise ArgumentError, "Missing stats for #{self}"
+		@skills     = options[:skills] or raise ArgumentError, "Missing skills for #{self}"
 		@has_ball   = options[:has_ball] or false
 		@health     = Health::OK
 		@health_txt = FloatingText.create("", :x => @x + 5, :y => @y + 5, :timer => 0, :color => 0xFFFF0000)

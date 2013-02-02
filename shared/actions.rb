@@ -148,7 +148,7 @@ module Actions
 	end
 
 	def stumble target_player
-		if @abilities.include? :dodge
+		if @skills.include? :dodge
 			push target_player
 		else
 			down target_player

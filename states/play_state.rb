@@ -7,6 +7,7 @@ require "pitch"
 require "ball"
 require "player"
 require "hud"
+require "races"
 
 module GameStates
 
@@ -25,18 +26,12 @@ class PlayState < GameState
 		@pitch = Pitch.create
 		@pitch.on_unlock { show_movement }
 
-		x, y  = to_screen_coords [12, 8]
-		@ball = Ball.create :pitch => @pitch
-		@ball.set_pos! x, y, false
 
 		@action_coords = nil
-
 		@selected      = nil
 		@last_selected = nil
 
 		@hud = HUD.create :teams => @pitch.teams, :pitch => @pitch
-
-		randomize
 	end
 
 
@@ -176,60 +171,6 @@ class PlayState < GameState
 				MovementSquare.create( :x => i, :y => j, :type => :square, :color => :green )
 			end
 			@action_coords = [x,y]
-		end
-	end
-
-	def randomize
-		roles = { :human => ["lineman", "blitzer", "catcher", "thrower"], :orc => ["lineman", "blitzer", "thrower"] }
-		races = [:human, :orc]
-
-		positions = [[3,6], [3,8], [7,5], [7,9], [10,1], [10, 13], [12,3], [12,6], [12,7], [12,8], [12,11]]
-
-		race = races.sample
-		0.upto(10) do |i|
-			role = roles[race].sample
-			loop do
-				x, y = positions[i]
-				pos = [x, y]
-				unless @pitch[pos]
-					has_ball = @ball.pos == pos
-					@pitch.teams[0] << Player.create(
-					                      :team => @pitch.teams[0],
-					                      :x => x,
-					                      :y => y,
-					                      :has_ball => has_ball,
-					                      :pitch => @pitch,
-					                      :ball => @ball,
-					                      :race => race,
-					                      :role => role,
-					                      )
-					break
-				end
-			end
-		end
-
-		race = races.sample
-		0.upto(10) do |i|
-			role = roles[race].sample
-			loop do
-				x, y = positions[i]
-				x = Pitch::WIDTH - x - 1
-				pos = [x, y]
-				unless @pitch[pos]
-					has_ball = @ball.pos == pos
-					@pitch.teams[1] << Player.create(
-					                      :team => @pitch.teams[1],
-					                      :x => x,
-					                      :y => y,
-					                      :has_ball => has_ball,
-					                      :pitch => @pitch,
-					                      :ball => @ball,
-					                      :race => race,
-					                      :role => role
-					                      )
-					break
-				end
-			end
 		end
 	end
 end

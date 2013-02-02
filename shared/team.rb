@@ -13,9 +13,9 @@ class Team
 
 		@active = options[:active] || false
 
-		@side   = options[:side] || :A
+		@side   = options[:side]   || :A
 
-		@pitch  = options[:pitch] || raise(ArgumentError, "You did not specify a pitch for #{self}")
+		@pitch  = options[:pitch]  || raise(ArgumentError, "You did not specify a pitch for #{self}")
 
 		@players = []
 

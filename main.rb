@@ -3,7 +3,7 @@ $: << File.expand_path(File.dirname(__FILE__))
 $: << File.join(File.expand_path(File.dirname(__FILE__)), "helpers")
 $: << File.join(File.expand_path(File.dirname(__FILE__)), "shared")
 $: << File.join(File.expand_path(File.dirname(__FILE__)), "states")
-puts $:
+$: << File.join(File.expand_path(File.dirname(__FILE__)), "config")
 
 require 'rubygems'
 require 'chingu'
@@ -12,6 +12,7 @@ include Chingu
 
 require "floating_text"
 require "play_state"
+require "cursor"
 
 include GameStates
 
@@ -26,7 +27,7 @@ class Game < Window
 
 		FPSText.create "fps", :x => 15, :y => 25, :zorder => 1000
 
-		change_cursor :normal
+		@cursor_image = Cursor.create
 
 		push_game_state PlayState.new
 	end
@@ -36,19 +37,14 @@ class Game < Window
 		self.caption = "Bloodbowl (fps : #{fps})"
 	end
 
-	def draw
-		super
-		@cursor_image.draw mouse_x, mouse_y, 1000 if @cursor_image
-	end
-
 	def change_cursor symb
-		raise ArgumentError, "#{symb}" unless symb.is_a? Symbol
-		@cursor_image = Image["cursors/#{symb}.png"]
+		@cursor_image.set_image symb
 	end
 end
 
 if __FILE__ == $0
 	Image.autoload_dirs  += [File.join(File.dirname(__FILE__), "media", "images")]
 	Sample.autoload_dirs += [File.join(File.dirname(__FILE__), "media", "sounds")]
+	Sample.autoload_dirs += [File.join(File.dirname(__FILE__), "media", "cursors")]
 	Game.new.show
 end

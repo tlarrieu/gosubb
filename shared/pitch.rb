@@ -4,6 +4,9 @@ include Gosu
 
 require "barrier"
 require "team"
+require "player"
+require "races"
+require "config"
 
 class Pitch < GameObject
 	include Helpers::Measures
@@ -31,6 +34,12 @@ class Pitch < GameObject
 		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
 		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
 		@active_team = @teams[0]
+
+		x, y  = to_screen_coords [12, 8]
+		@ball = Ball.create :pitch => self
+		@ball.set_pos! x, y, false
+
+		load
 	end
 
 	def new_turn!
@@ -79,5 +88,31 @@ class Pitch < GameObject
 
 	def on_unlock &block
 		@unlock_listener = block
+	end
+
+	# Since we do not load it statically anymore, this seems to take much more time.
+	# We shall watch by there if we can improve this
+	def load
+		Configuration.instance[:teams].each do |team|
+			race = team[:race]
+			num  = team[:num]
+			team[:players].each do |player|
+				role = player[:role]
+				pos  = player[:pos]
+				x, y = pos
+				@teams[num] << Player.create(
+					:team => @teams[num],
+					:x => x,
+					:y => y,
+					:pitch => self,
+					:ball => @ball,
+					:race => race,
+					:role => role,
+					:has_ball => @ball.pos == pos,
+					:stats => Races::list[race][role][:stats],
+					:skills => Races::list[race][role][:skills]
+				)
+			end
+		end
 	end
 end
