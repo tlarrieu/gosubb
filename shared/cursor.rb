@@ -6,6 +6,7 @@ class Cursor < GameObject
 		super
 		@list =
 		{
+			:ball    => Image["cursors/ball.png"],
 			:blitz   => Image["cursors/blitz.png"],
 			:d_1     => Image["cursors/d_1.png"],
 			:d_2     => Image["cursors/d_2.png"],
@@ -24,6 +25,16 @@ class Cursor < GameObject
 			:throw   => Image["cursors/throw.png"],
 			:wait    => Image["cursors/wait.png"]
 		}
+
+		@secondary_list =
+		{
+			:one   => Image["cursors/plus_one.png"],
+			:two   => Image["cursors/plus_two.png"],
+			:three => Image["cursors/plus_three.png"],
+			:four  => Image["cursors/plus_four.png"],
+			:five  => Image["cursors/plus_five.png"],
+			:six   => Image["cursors/plus_six.png"],
+		}
 		@image = @list[:normal]
 		rotation_center(:top_left)
 		@zorder = 1000
@@ -31,13 +42,26 @@ class Cursor < GameObject
 		@y = $window.mouse_y
 	end
 
+	def draw
+		super
+		@secondary_image.draw $window.mouse_x, $window.mouse_y, @zorder + 1 if @secondary_image
+	end
+
 	def set_image key
 		raise ArgumentError, "Unknown cursor #{key}" unless @list.key? key
 		@image = @list[key]
+		@secondary_image = nil
+	end
+
+	def set_secondary_image key
+		raise ArgumentError, "Unknown secondary cursor #{key}" unless @secondary_list.key? key
+		@secondary_image = @secondary_list[key]
 	end
 
 	def update
-		@x = $window.mouse_x
-		@y = $window.mouse_y
+		if $window
+			@x = $window.mouse_x
+			@y = $window.mouse_y
+		end
 	end
 end

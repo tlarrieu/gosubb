@@ -37,14 +37,14 @@ class Game < Window
 		self.caption = "Bloodbowl (fps : #{fps})"
 	end
 
-	def change_cursor symb
+	def change_cursor symb, secondary = nil
 		@cursor_image.set_image symb
+		@cursor_image.set_secondary_image secondary if secondary
 	end
 end
 
 if __FILE__ == $0
 	Image.autoload_dirs  += [File.join(File.dirname(__FILE__), "media", "images")]
 	Sample.autoload_dirs += [File.join(File.dirname(__FILE__), "media", "sounds")]
-	Sample.autoload_dirs += [File.join(File.dirname(__FILE__), "media", "cursors")]
 	Game.new.show
 end

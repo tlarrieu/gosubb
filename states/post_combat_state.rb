@@ -45,6 +45,7 @@ class PostCombatState < GameState
 	def update
 		super
 		previous_game_state.update
+		$window.change_cursor :normal
 	end
 
 	def draw

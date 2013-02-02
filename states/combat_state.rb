@@ -19,12 +19,9 @@ class CombatState < GameState
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
-		diff = (@attacker.stats[:str] - @defender.stats[:str]).abs
 		highest = [@attacker.stats[:str], @defender.stats[:str]].max
 		lowest  = [@attacker.stats[:str], @defender.stats[:str]].min
-		nb_dices = if highest >= 3 * lowest
-			4
-		elsif highest >= 2 * lowest
+		nb_dices = if highest >= 2 * lowest
 			3
 		elsif highest > lowest
 			2
@@ -58,6 +55,7 @@ class CombatState < GameState
 	def update
 		super
 		previous_game_state.update
+		$window.change_cursor :normal
 	end
 
 	def draw

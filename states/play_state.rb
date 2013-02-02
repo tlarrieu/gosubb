@@ -41,6 +41,10 @@ class PlayState < GameState
 		show_movement
 	end
 
+	def finalize
+		$window.change_cursor :normal
+	end
+
 	def show_menu
 		push_game_state MainMenuState.new
 	end
@@ -70,31 +74,109 @@ class PlayState < GameState
 		# Movement allowance
 		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
 
-		# HUD update
-		found = false
-		@pitch.teams.each do |t|
-			t.each do |p|
-				if p.collision_at? $window.mouse_x, $window.mouse_y
-					@hud.show p
-					found = true
-				end
-			end
-		end
-		@hud.clear unless found
-
 		# Turnover
 		if @pitch.turnover?
 			@pitch.unlocked? do
 				new_turn!
 				Sample["turnover.ogg"].play 0.3
 				@text = FloatingText.create "Turnover !",
-				                            :x => @pitch.width / 2.0,
+				                            :x => $window.width / 2.0,
 				                            :y => $window.height - 100,
 				                            :timer => 3000,
 				                            :color => 0xFFFF0000,
 				                            :size => 40
 			end
 		end
+
+		# Cursor management
+		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		if @pitch[cursor_pos]
+			@hud.show @pitch[cursor_pos] # Update HUD
+			if @selected and @selected.team.active?
+				unless @pitch[cursor_pos].team.active?
+					attacker = @selected
+					defender = @pitch[cursor_pos]
+					highest = [attacker.stats[:str], defender.stats[:str]].max
+					lowest  = [attacker.stats[:str], defender.stats[:str]].min
+					if attacker.stats[:str] >= defender.stats[:str]
+						if highest >= 2 * lowest
+							$window.change_cursor :d_3
+						elsif highest > lowest
+							$window.change_cursor :d_2
+						else
+							$window.change_cursor :d_1
+						end
+					else
+						if highest >= 2 * lowest
+							$window.change_cursor :d_3_red
+						elsif highest > lowest
+							$window.change_cursor :d_2_red
+						else
+							$window.change_cursor :d_1_red
+						end
+					end
+				else
+					if @selected == @pitch[cursor_pos]
+						if @selected.can_blitz?
+							$window.change_cursor :blitz
+						else
+							$window.change_cursor :normal
+						end
+					elsif @selected.has_ball?
+						if @selected.close_to? @pitch[cursor_pos]
+							$window.change_cursor :handoff
+						else
+							$window.change_cursor :ball
+						end
+					else
+						$window.change_cursor :normal
+					end
+				end
+			else
+				if @pitch[cursor_pos].team.active?
+					$window.change_cursor :select
+				else
+					$window.change_cursor :red
+				end
+			end
+		else
+			@hud.clear # Update HUD
+			if @pitch.ball.pos == cursor_pos and @selected and @selected.team.active?
+				$window.change_cursor :take
+			else
+				unless @selected and @selected.team.active?
+					$window.change_cursor :normal
+				else
+					roll = false
+					@pitch.active_players_around(@selected.pos).each do |pl|
+						unless pl.team == @selected.team
+							roll = true
+							break
+						end
+					end
+					if roll
+						res = 7 - @selected.stats[:agi]
+						case res
+						when 6
+							$window.change_cursor :move, :six
+						when 5
+							$window.change_cursor :move, :five
+						when 4
+							$window.change_cursor :move, :four
+						when 3
+							$window.change_cursor :move, :three
+						when 2
+							$window.change_cursor :move, :two
+						when 1
+							$window.change_cursor :move, :one
+						end
+					else
+						$window.change_cursor :move
+					end
+				end
+			end
+		end
+
 	end
 
 	def select
