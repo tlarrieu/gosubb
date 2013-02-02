@@ -17,7 +17,7 @@ class Configuration < Hash
 					{ :role => :thrower, :pos => [10,1] },
 					{ :role => :thrower, :pos => [10, 13] },
 					{ :role => :catcher, :pos => [12,3] },
-					{ :role => :catcher, :pos => [12,6] },
+					{ :role => :ogre, :pos => [12,6] },
 					{ :role => :catcher, :pos => [12,7] },
 					{ :role => :catcher, :pos => [12,8] },
 					{ :role => :lineman, :pos => [12,11] }

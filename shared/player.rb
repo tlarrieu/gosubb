@@ -18,7 +18,7 @@ class Player < GameObject
 	include States
 
 	traits :bounding_circle
-	attr_reader :team, :cur_ma, :stats, :race, :role, :health
+	attr_reader :team, :cur_ma, :stats, :skills, :race, :role, :health
 
 	def initialize options = {}
 		super

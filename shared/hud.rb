@@ -120,11 +120,14 @@ class PlayerBlock < GameObject
 		@txt[:str] = Text.create( "", :x => @x - 80, :y => @y - 15, :zorder => 2, :rotation_center => :center_right )
 		@txt[:agi] = Text.create( "", :x => @x - 80, :y => @y + 15, :zorder => 2, :rotation_center => :center_right )
 		@txt[:arm] = Text.create( "", :x => @x - 70, :y => @y + 45, :zorder => 2, :rotation_center => :center_right )
+
+		@skills = Array.new(6) { |i| Text.create("", :x => @x + 90 - 10 * (i < 3 ? (3 - i) : (i - 2)), :y => @y - 20 * (3 - i) + 5, :rotation_center => :center_left) }
 	end
 
 	def set player
 		@player = player
 		@portrait.destroy if @portrait
+		@skills.each { |skill| skill.text = "" }
 		if player.nil?
 			@txt.each { |key,value| @txt[key].text = ""}
 		else
@@ -133,6 +136,10 @@ class PlayerBlock < GameObject
 				@txt[:str].text = "STR : #{player.stats[:str]}"
 				@txt[:agi].text = "AGI : #{player.stats[:agi]}"
 				@txt[:arm].text = "ARM : #{player.stats[:arm]}"
+
+				nb_skills = player.skills.count
+				start = (6 - nb_skills) / 2
+				nb_skills.times { |i| @skills[start + i].text = "#{player.skills[i].to_s.gsub(/\_/, " ").capitalize}" }
 				@portrait = GameObject.create :x => @x, :y => @y, :image => player.image, :factor => 2
 			end
 		end
