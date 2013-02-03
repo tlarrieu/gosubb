@@ -34,6 +34,7 @@ class Pitch < GameObject
 		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
 		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
 		@active_team = @teams[0]
+		@active_team.new_turn!
 
 		x, y  = to_screen_coords [12, 8]
 		@ball = Ball.create :pitch => self

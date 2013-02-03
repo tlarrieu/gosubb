@@ -10,6 +10,8 @@ class Square < GameObject
 	@@type  = :state
 	@@color = :green
 
+	@@loaded = {}
+
 	def initialize options={}
 		options = {:type => @@type, :color => @@color}.merge(options)
 		config options
@@ -28,7 +30,11 @@ class Square < GameObject
 		valid_colors = { :state => [:red, :green, :yellow], :square => [:green, :blue, :gray]}
 		raise ArgumentError, "Wrong color #{@color}" unless valid_colors[@type].include? @color
 
-		@image = Image["#{@type}-#{@color}.png"]
+		key = "#{@type}-#{@color}"
+		unless @@loaded[key]
+			@@loaded[key] = Image["#{@type}-#{@color}.png"]
+		end
+		@image = @@loaded[key]
 	end
 end
 

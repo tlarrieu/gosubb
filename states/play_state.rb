@@ -71,20 +71,19 @@ class PlayState < GameState
 
 	def update
 		super
-		# Movement allowance
-		show_movement if @action_coords.nil? and not @ma_squares.nil? and @ma_squares.empty?
-
 		# Turnover
 		if @pitch.turnover?
 			@pitch.unlocked? do
 				new_turn!
 				Sample["turnover.ogg"].play 0.3
-				@text = FloatingText.create "Turnover !",
-				                            :x => $window.width / 2.0,
-				                            :y => $window.height - 100,
-				                            :timer => 3000,
-				                            :color => 0xFFFF0000,
-				                            :size => 40
+				@text = FloatingText.create(
+					"Turnover !",
+					:x => $window.width / 2.0,
+					:y => $window.height - 100,
+					:timer => 3000,
+					:color => 0xFFFF0000,
+					:size => 40
+				)
 			end
 		end
 

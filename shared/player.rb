@@ -20,6 +20,8 @@ class Player < GameObject
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :skills, :race, :role, :health
 
+	@@loaded = {}
+
 	def initialize options = {}
 		super
 		@team       = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
@@ -27,7 +29,11 @@ class Player < GameObject
 		@ball       = options[:ball]  or raise ArgumentError, "Unable to find ball for #{self}"
 		@race       = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
 		@role       = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
-		@image      = Image["teams/#{race}/#{role}#{@team.side}.gif"]
+		key = "#{race}/#{role}#{@team.side}"
+		unless @@loaded[key]
+			@@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}.gif"]
+		end
+		@image = @@loaded[key]
 		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x   = @x
 		@target_y   = @y
@@ -217,17 +223,37 @@ class Player < GameObject
 	end
 
 	def notify_ring_change
-		params = {:x => @x, :y => @y, :color => :yellow}
-		if @selected
-			@square = StateSquare.new params.merge(:color => :yellow)
-		elsif @team.active?
-			if @can_move
-				@square = StateSquare.new params.merge(:color => :green)
+		begin
+			if @selected
+				color = "-yellow"
+			elsif @team.active?
+				if @can_move
+					color = "-green"
+				else
+					color = "-red"
+				end
 			else
-				@square = StateSquare.new params.merge(:color => :red)
+				color = ""
 			end
-		else
+			key = "#{@race}/#{@role}#{@team.side}#{color}"
+			unless @@loaded[key]
+				@@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.gif"]
+			end
 			@square = nil
+			@image = @@loaded[key]
+		rescue
+			params = {:x => @x, :y => @y, :color => :yellow}
+			if @selected
+				@square = StateSquare.new params.merge(:color => :yellow)
+			elsif @team.active?
+				if @can_move
+					@square = StateSquare.new params.merge(:color => :green)
+				else
+					@square = StateSquare.new params.merge(:color => :red)
+				end
+			else
+				@square = nil
+			end
 		end
 	end
 end
