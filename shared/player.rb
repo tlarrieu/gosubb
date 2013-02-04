@@ -245,7 +245,6 @@ class Player < GameObject
 			raise ArgumentError, "bad parameter. shall be one among : :red, :green, :yellow, :none"
 		end
 
-
 		key = "#{@race}/#{@role}#{@team.side}"
 		if @stage == :play
 			case symb

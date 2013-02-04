@@ -48,12 +48,12 @@ class Team
 	end
 
 	def new_turn!
-		@players.each { |p| p.new_turn! }
 		inc :turn
 		@active  = true
 		@blitz   = false
 		@pass    = false
 		@handoff = false
+		@players.each { |p| p.new_turn! }
 	end
 
 	def end_turn!

@@ -77,7 +77,7 @@ module States
 	end
 
 	def can_blitz?
-		not @team.blitz? and can_move?
+		not @team.blitz? and @stats[:ma] == @cur_ma
 	end
 
 	def on_pitch?

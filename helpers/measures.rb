@@ -30,6 +30,7 @@ module Measures
 	end
 
 	# TODO: handle non connexity (infinite loop involved there :( )
+	# TODO2: include a way to take tackle zones into account (we still have to decide how much we want to help human player)
 	def a_star pitch, start, goal
 		# The set of nodes already evaluated.
 		closedset = []
@@ -83,7 +84,7 @@ module Measures
 								better = false
 							end
 
-							# Updating what needs to
+							# Updating what needs to be
 							if better then
 								came_from[y] = x
 								g_score[y]   = g

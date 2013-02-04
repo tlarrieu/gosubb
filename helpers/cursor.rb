@@ -68,7 +68,7 @@ module Cursor
 			if @pitch.ball.pos == cursor_pos and @selected and @selected.team.active?
 				$window.change_cursor :take
 			else
-				unless @selected and @selected.team.active?
+				unless @selected and @selected.can_move?and @selected.team.active?
 					$window.change_cursor :normal
 				else
 					roll = false
