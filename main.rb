@@ -11,7 +11,7 @@ include Gosu
 include Chingu
 
 require "floating_text"
-require "play_state"
+require "organize_state"
 require "cursor"
 
 include GameStates
@@ -29,7 +29,7 @@ class Game < Window
 
 		@cursor_image = Cursor.create
 
-		push_game_state PlayState.new
+		push_game_state OrganizeState.new
 	end
 
 	def update

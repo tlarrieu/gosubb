@@ -9,21 +9,27 @@ require "player"
 require "hud"
 require "races"
 
-module GameStates
-
 class PlayState < GameState
 	include Helpers::Measures
 	include Helpers::Barrier
 
 	attr_reader :teams
 
-	def initialize
+	def initialize options = {}
+		@pitch = options.delete(:pitch) || Pitch.create
 		super
 		@sound       = Sample["turnover.ogg"]
 
 		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => lambda{ @pitch.turnover! }, :escape => :show_menu }
 
-		@pitch = Pitch.create
+		@pitch.load_ball Ball.create :pitch => @pitch, :x => 12, :y => 8
+		add_game_object @pitch
+		@pitch.each do |p|
+			p.parent = self
+			add_game_object p
+			p.input = { :mouse_left => lambda { p.select }}
+		end
+		@pitch.start_new_game
 		@pitch.on_unlock { show_movement }
 
 
@@ -71,6 +77,7 @@ class PlayState < GameState
 
 	def update
 		super
+
 		# Turnover
 		if @pitch.turnover?
 			@pitch.unlocked? do
@@ -93,26 +100,30 @@ class PlayState < GameState
 			@hud.show @pitch[cursor_pos] # Update HUD
 			if @selected and @selected.team.active?
 				unless @pitch[cursor_pos].team.active?
-					attacker = @selected
-					defender = @pitch[cursor_pos]
-					highest = [attacker.stats[:str], defender.stats[:str]].max
-					lowest  = [attacker.stats[:str], defender.stats[:str]].min
-					if attacker.stats[:str] >= defender.stats[:str]
-						if highest >= 2 * lowest
-							$window.change_cursor :d_3
-						elsif highest > lowest
-							$window.change_cursor :d_2
+					if @pitch[cursor_pos].health == Health::OK
+						attacker = @selected
+						defender = @pitch[cursor_pos]
+						highest = [attacker.stats[:str], defender.stats[:str]].max
+						lowest  = [attacker.stats[:str], defender.stats[:str]].min
+						if attacker.stats[:str] >= defender.stats[:str]
+							if highest >= 2 * lowest
+								$window.change_cursor :d_3
+							elsif highest > lowest
+								$window.change_cursor :d_2
+							else
+								$window.change_cursor :d_1
+							end
 						else
-							$window.change_cursor :d_1
+							if highest >= 2 * lowest
+								$window.change_cursor :d_3_red
+							elsif highest > lowest
+								$window.change_cursor :d_2_red
+							else
+								$window.change_cursor :d_1_red
+							end
 						end
 					else
-						if highest >= 2 * lowest
-							$window.change_cursor :d_3_red
-						elsif highest > lowest
-							$window.change_cursor :d_2_red
-						else
-							$window.change_cursor :d_1_red
-						end
+						$window.change_cursor :red
 					end
 				else
 					if @selected == @pitch[cursor_pos]
@@ -184,7 +195,7 @@ class PlayState < GameState
 		@selected      = @pitch[pos]
 		@action_coords = nil
 		show_movement
-		@hud.stick @selected
+		# @hud.stick @selected
 	end
 
 	def action
@@ -254,6 +265,4 @@ class PlayState < GameState
 			@action_coords = [x,y]
 		end
 	end
-end
-
 end

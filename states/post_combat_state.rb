@@ -4,8 +4,6 @@ include Gosu
 
 require "helpers/measures"
 
-module GameStates
-
 class PostCombatState < GameState
 	include Helpers::Measures
 
@@ -94,6 +92,4 @@ class PostCombatState < GameState
 		@attacker.push_to! x, y
 		close
 	end
-end
-
 end

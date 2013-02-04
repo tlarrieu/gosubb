@@ -26,13 +26,10 @@ class Player < GameObject
 		super
 		@team       = options[:team]  or raise ArgumentError, "Missing team number for #{self}"
 		@pitch      = options[:pitch] or raise ArgumentError, "Unable to fetch pitch for #{self}"
-		@ball       = options[:ball]  or raise ArgumentError, "Unable to find ball for #{self}"
 		@race       = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
 		@role       = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
 		key = "#{race}/#{role}#{@team.side}"
-		unless @@loaded[key]
-			@@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}.gif"]
-		end
+		["-yellow", "-red", "-green", ""].each { |color| @@loaded[key + color] = @@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.png"] } unless @@loaded[key]
 		@image = @@loaded[key]
 		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x   = @x
@@ -47,12 +44,13 @@ class Player < GameObject
 		@skills     = options[:skills] or raise ArgumentError, "Missing skills for #{self}"
 		@has_ball   = options[:has_ball] or false
 		@health     = Health::OK
-		@health_txt = FloatingText.create("", :x => @x + 5, :y => @y + 5, :timer => 0, :color => 0xFFFF0000)
-		new_turn!
+		@health_txt = FloatingText.new("", :x => @x + 5, :y => @y + 5, :timer => 0, :color => 0xFFFF0000)
 	end
 
-	def setup
-		self.input = { :mouse_left => :select }
+	def load_ball ball
+		raise ArgumentError unless ball.is_a? Ball
+		@ball = ball
+		@has_ball = ball.pos == pos
 	end
 
 	def select
@@ -91,6 +89,7 @@ class Player < GameObject
 	def draw
 		if on_pitch?
 			@square.draw if @square
+			@health_txt.draw if @health_txt
 			super
 		end
 	end
@@ -223,37 +222,14 @@ class Player < GameObject
 	end
 
 	def notify_ring_change
-		begin
-			if @selected
-				color = "-yellow"
-			elsif @team.active?
-				if @can_move
-					color = "-green"
-				else
-					color = "-red"
-				end
-			else
-				color = ""
-			end
-			key = "#{@race}/#{@role}#{@team.side}#{color}"
-			unless @@loaded[key]
-				@@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.gif"]
-			end
-			@square = nil
-			@image = @@loaded[key]
-		rescue
-			params = {:x => @x, :y => @y, :color => :yellow}
-			if @selected
-				@square = StateSquare.new params.merge(:color => :yellow)
-			elsif @team.active?
-				if @can_move
-					@square = StateSquare.new params.merge(:color => :green)
-				else
-					@square = StateSquare.new params.merge(:color => :red)
-				end
-			else
-				@square = nil
-			end
+		if @selected
+			color = "-yellow"
+		elsif @team.active?
+			if @can_move then color = "-green" else color = "-red" end
+		else
+			color = ""
 		end
+		key = "#{@race}/#{@role}#{@team.side}#{color}"
+		@image = @@loaded[key]
 	end
 end

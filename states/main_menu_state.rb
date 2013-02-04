@@ -4,8 +4,6 @@ include Gosu
 
 require 'states/menu'
 
-module GameStates
-
 class MainMenuState < GameState
 	def setup
 		Sample["pause_in.ogg"].play 0.5
@@ -57,6 +55,4 @@ class MainMenuState < GameState
 	def load
 
 	end
-end
-
 end

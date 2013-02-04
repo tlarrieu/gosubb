@@ -7,6 +7,7 @@ require "team"
 require "player"
 require "races"
 require "config"
+require "ball"
 
 class Pitch < GameObject
 	include Helpers::Measures
@@ -33,14 +34,19 @@ class Pitch < GameObject
 		@teams = []
 		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
 		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
-		@active_team = @teams[0]
-		@active_team.new_turn!
-
-		x, y  = to_screen_coords [12, 8]
-		@ball = Ball.create :pitch => self
-		@ball.set_pos! x, y, false
 
 		load
+	end
+
+	def start_new_game
+		@active_team = @teams[0]
+		@active_team.new_turn!
+	end
+
+	def load_ball ball
+		raise ArgumentError unless ball.is_a? Ball
+		@ball = ball
+		each { |p| p.load_ball @ball }
 	end
 
 	def new_turn!
@@ -61,6 +67,14 @@ class Pitch < GameObject
 	def [] pos
 		@teams.each { |t| return t[pos] unless t[pos].paused? if t[pos]}
 		nil
+	end
+
+	def each &block
+		@teams.each do |team|
+			team.each do |player|
+				yield player
+			end
+		end
 	end
 
 	def active_players_around pos
@@ -106,10 +120,8 @@ class Pitch < GameObject
 					:x => x,
 					:y => y,
 					:pitch => self,
-					:ball => @ball,
 					:race => race,
 					:role => role,
-					:has_ball => @ball.pos == pos,
 					:stats => Races::list[race][role][:stats],
 					:skills => Races::list[race][role][:skills]
 				)

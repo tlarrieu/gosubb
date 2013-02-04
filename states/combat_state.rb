@@ -6,8 +6,6 @@ require "helpers/dices"
 require "helpers/images"
 require "states/post_combat_state"
 
-module GameStates
-
 # TODO implement reroll
 
 class CombatState < GameState
@@ -114,6 +112,4 @@ class DiceObject < GameObject
 			end
 		end
 	end
-end
-
 end

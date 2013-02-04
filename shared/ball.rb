@@ -9,11 +9,13 @@ class Ball < GameObject
 	include Helpers::Measures
 
 	def initialize options = {}
-		super :x => 0, :y => 0, :image => Image["ball.png"], :zorder => 101
+		x, y = 0, 0
+		x, y = to_screen_coords [options.delete(:x), options.delete(:y)] if options[:x] and options[:y]
+		super :x => x, :y => y, :image => Image["ball.png"], :zorder => 101
 		@pitch    = options[:pitch] or raise "Unable to fetch pitch for #{self}"
 		@velocity = 0.4
 
-		@target_x, @target_y = 0, 0
+		@target_x, @target_y = x, y
 		@@instance = self
 	end
 
