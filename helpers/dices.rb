@@ -33,8 +33,7 @@ module Dices
 		end
 	end
 
-	# TODO: ... and around there too
-	def roll_agility agi_score, modifs=[]
+	def roll_agility agi_score, modifs=0
 		score = roll :classic
 		res = :success
 		if score == 6
@@ -42,9 +41,7 @@ module Dices
 		elsif score == 1
 			score = :fumble
 		else
-			modifs.each do |mod|
-				score += mod
-			end
+			score += modifs
 			if (score >= 7 - agi_score)
 				res = :success
 			else
@@ -54,5 +51,10 @@ module Dices
 
 		return res
 	end
+
+	def min_dice_score_required agi_score, modif=0
+		[[7 - (agi_score + modif), 1].max, 6].min
+	end
+
 end
 end

@@ -38,15 +38,12 @@ class Pitch < GameObject
 		load
 	end
 
-	def start_new_game
-		@active_team = @teams[0]
-		@active_team.new_turn!
-	end
-
-	def load_ball ball
+	def start_new_game ball
 		raise ArgumentError unless ball.is_a? Ball
 		@ball = ball
-		each { |p| p.load_ball @ball }
+		each { |p| p.set_stage :stage => :play, :ball => @ball }
+		@active_team = @teams[0]
+		@active_team.new_turn!
 	end
 
 	def new_turn!
@@ -88,6 +85,10 @@ class Pitch < GameObject
 			end
 		end
 		res
+	end
+
+	def each_active_players_around pos, &block
+		active_players_around(pos).each { |p| yield p }
 	end
 
 	def active_team= team

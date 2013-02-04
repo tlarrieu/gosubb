@@ -28,12 +28,12 @@ class Cursor < GameObject
 
 		@secondary_list =
 		{
-			:one   => Image["cursors/plus_one.png"],
-			:two   => Image["cursors/plus_two.png"],
-			:three => Image["cursors/plus_three.png"],
-			:four  => Image["cursors/plus_four.png"],
-			:five  => Image["cursors/plus_five.png"],
-			:six   => Image["cursors/plus_six.png"],
+			1 => Image["cursors/plus_one.png"],
+			2 => Image["cursors/plus_two.png"],
+			3 => Image["cursors/plus_three.png"],
+			4 => Image["cursors/plus_four.png"],
+			5 => Image["cursors/plus_five.png"],
+			6 => Image["cursors/plus_six.png"],
 		}
 		@image = @list[:normal]
 		rotation_center(:top_left)

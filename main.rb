@@ -12,7 +12,7 @@ include Chingu
 
 require "floating_text"
 require "organize_state"
-require "cursor"
+require "shared/cursor"
 
 include GameStates
 

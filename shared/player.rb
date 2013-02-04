@@ -29,7 +29,11 @@ class Player < GameObject
 		@race       = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
 		@role       = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
 		key = "#{race}/#{role}#{@team.side}"
-		["-yellow", "-red", "-green", ""].each { |color| @@loaded[key + color] = @@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.png"] } unless @@loaded[key]
+		unless @@loaded[key]
+			["-yellow", "-red", "-green", ""].each do |color|
+				@@loaded[key + color] = @@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.png"]
+			end
+		end
 		@image = @@loaded[key]
 		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
 		@target_x   = @x
@@ -43,14 +47,19 @@ class Player < GameObject
 		@stats      = options[:stats] or raise ArgumentError, "Missing stats for #{self}"
 		@skills     = options[:skills] or raise ArgumentError, "Missing skills for #{self}"
 		@has_ball   = options[:has_ball] or false
+		@stage      = options[:stage] or :configure
 		@health     = Health::OK
 		@health_txt = FloatingText.new("", :x => @x + 5, :y => @y + 5, :timer => 0, :color => 0xFFFF0000)
 	end
 
-	def load_ball ball
-		raise ArgumentError unless ball.is_a? Ball
-		@ball = ball
-		@has_ball = ball.pos == pos
+	def set_stage options={}
+		raise ArgumentError unless [:play, :configure].include? options[:stage]
+		raise ArgumentError if options[:stage] == :play and not options[:ball].is_a? Ball
+		if options[:stage] == :play
+			@ball = options[:ball]
+			@has_ball = @ball.pos == pos
+		end
+		@stage = options[:stage]
 	end
 
 	def select
@@ -88,7 +97,6 @@ class Player < GameObject
 
 	def draw
 		if on_pitch?
-			@square.draw if @square
 			@health_txt.draw if @health_txt
 			super
 		end
@@ -146,7 +154,7 @@ class Player < GameObject
 				else
 					@cur_node += 1
 				end
-				@cur_ma   -= 1
+				@cur_ma   -= 1 if @cur_ma
 				@footsteps.play
 
 				x, y = to_pitch_coords [tx, ty]
@@ -223,13 +231,36 @@ class Player < GameObject
 
 	def notify_ring_change
 		if @selected
-			color = "-yellow"
+			set_halo :yellow
 		elsif @team.active?
-			if @can_move then color = "-green" else color = "-red" end
+			if @can_move then set_halo :green else set_halo :red end
 		else
-			color = ""
+			set_halo :none
 		end
-		key = "#{@race}/#{@role}#{@team.side}#{color}"
+	end
+
+	def set_halo symb
+		raise ArgumentError, "#{symb} is not a Symbol" unless symb.is_a? Symbol
+		unless [:red, :green, :yellow, :none].include? symb
+			raise ArgumentError, "bad parameter. shall be one among : :red, :green, :yellow, :none"
+		end
+
+
+		key = "#{@race}/#{@role}#{@team.side}"
+		if @stage == :play
+			case symb
+			when :red
+				key << "-red"
+			when :green
+				key << "-green"
+			when :yellow
+				key << "-yellow"
+			end
+		end
 		@image = @@loaded[key]
+	end
+
+	def default_image
+		@@loaded["#{@race}/#{@role}#{@team.side}"]
 	end
 end

@@ -125,22 +125,24 @@ class PlayerBlock < GameObject
 	end
 
 	def set player
-		@player = player
-		@portrait.destroy if @portrait
-		@skills.each { |skill| skill.text = "" }
-		if player.nil?
-			@txt.each { |key,value| @txt[key].text = ""}
-		else
-			unlocked? do
-				@txt[:ma].text  = "MA  : #{player.stats[:ma]}"
-				@txt[:str].text = "STR : #{player.stats[:str]}"
-				@txt[:agi].text = "AGI : #{player.stats[:agi]}"
-				@txt[:arm].text = "ARM : #{player.stats[:arm]}"
+		if @player != player
+			@player = player
+			@portrait.destroy if @portrait
+			@skills.each { |skill| skill.text = "" }
+			if player.nil?
+				@txt.each { |key,value| @txt[key].text = ""}
+			else
+				unlocked? do
+					@txt[:ma].text  = "MA  : #{player.stats[:ma]}"
+					@txt[:str].text = "STR : #{player.stats[:str]}"
+					@txt[:agi].text = "AGI : #{player.stats[:agi]}"
+					@txt[:arm].text = "ARM : #{player.stats[:arm]}"
 
-				nb_skills = player.skills.count
-				start = (6 - nb_skills) / 2
-				nb_skills.times { |i| @skills[start + i].text = "#{player.skills[i].to_s.gsub(/\_/, " ").capitalize}" }
-				@portrait = GameObject.create :x => @x, :y => @y, :image => player.image, :factor => 2
+					nb_skills = player.skills.count
+					start = (6 - nb_skills) / 2
+					nb_skills.times { |i| @skills[start + i].text = "#{player.skills[i].to_s.gsub(/\_/, " ").capitalize}" }
+					@portrait = GameObject.create :x => @x, :y => @y, :image => player.default_image, :factor => 2
+				end
 			end
 		end
 	end

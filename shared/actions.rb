@@ -46,8 +46,7 @@ module Actions
 
 	def blitz!
 		if can_blitz?
-			@blitz = true
-			true
+			@team.blitz!
 		else
 			false
 		end
@@ -78,12 +77,24 @@ module Actions
 					event! :fail
 				end
 			end
-			return true
+			return @team.pass!
 		end
 		return false
 	end
 
-	def catch! modifiers=[]
+	def handoff target_player
+		if can_handoff_to? target_player
+			@can_move, @has_ball = false, false
+			x, y = target_player.pos
+			Sample["pass_fast.ogg"].play
+			@ball.move_to! x, y
+			event! :pass
+			return @team.handoff!
+		end
+		return false
+	end
+
+	def catch! modifiers=0
 		res = roll_agility @stats[:agi], modifiers
 		if res == :success
 			@has_ball = true

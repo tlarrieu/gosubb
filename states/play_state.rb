@@ -8,10 +8,13 @@ require "ball"
 require "player"
 require "hud"
 require "races"
+require "helpers/cursor"
 
 class PlayState < GameState
 	include Helpers::Measures
 	include Helpers::Barrier
+	include Helpers::Cursor
+	include Helpers::Dices
 
 	attr_reader :teams
 
@@ -22,14 +25,13 @@ class PlayState < GameState
 
 		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => lambda{ @pitch.turnover! }, :escape => :show_menu }
 
-		@pitch.load_ball Ball.create :pitch => @pitch, :x => 12, :y => 8
+		@pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
 		add_game_object @pitch
 		@pitch.each do |p|
 			p.parent = self
 			add_game_object p
 			p.input = { :mouse_left => lambda { p.select }}
 		end
-		@pitch.start_new_game
 		@pitch.on_unlock { show_movement }
 
 
@@ -96,96 +98,7 @@ class PlayState < GameState
 
 		# Cursor management
 		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		if @pitch[cursor_pos]
-			@hud.show @pitch[cursor_pos] # Update HUD
-			if @selected and @selected.team.active?
-				unless @pitch[cursor_pos].team.active?
-					if @pitch[cursor_pos].health == Health::OK
-						attacker = @selected
-						defender = @pitch[cursor_pos]
-						highest = [attacker.stats[:str], defender.stats[:str]].max
-						lowest  = [attacker.stats[:str], defender.stats[:str]].min
-						if attacker.stats[:str] >= defender.stats[:str]
-							if highest >= 2 * lowest
-								$window.change_cursor :d_3
-							elsif highest > lowest
-								$window.change_cursor :d_2
-							else
-								$window.change_cursor :d_1
-							end
-						else
-							if highest >= 2 * lowest
-								$window.change_cursor :d_3_red
-							elsif highest > lowest
-								$window.change_cursor :d_2_red
-							else
-								$window.change_cursor :d_1_red
-							end
-						end
-					else
-						$window.change_cursor :red
-					end
-				else
-					if @selected == @pitch[cursor_pos]
-						if @selected.can_blitz?
-							$window.change_cursor :blitz
-						else
-							$window.change_cursor :normal
-						end
-					elsif @selected.has_ball?
-						if @selected.close_to? @pitch[cursor_pos]
-							$window.change_cursor :handoff
-						else
-							$window.change_cursor :ball
-						end
-					else
-						$window.change_cursor :normal
-					end
-				end
-			else
-				if @pitch[cursor_pos].team.active?
-					$window.change_cursor :select
-				else
-					$window.change_cursor :red
-				end
-			end
-		else
-			@hud.clear # Update HUD
-			if @pitch.ball.pos == cursor_pos and @selected and @selected.team.active?
-				$window.change_cursor :take
-			else
-				unless @selected and @selected.team.active?
-					$window.change_cursor :normal
-				else
-					roll = false
-					@pitch.active_players_around(@selected.pos).each do |pl|
-						unless pl.team == @selected.team
-							roll = true
-							break
-						end
-					end
-					if roll
-						res = 7 - @selected.stats[:agi]
-						case res
-						when 6
-							$window.change_cursor :move, :six
-						when 5
-							$window.change_cursor :move, :five
-						when 4
-							$window.change_cursor :move, :four
-						when 3
-							$window.change_cursor :move, :three
-						when 2
-							$window.change_cursor :move, :two
-						when 1
-							$window.change_cursor :move, :one
-						end
-					else
-						$window.change_cursor :move
-					end
-				end
-			end
-		end
+		update_cursor :state => :play, :cursor_pos => cursor_pos
 
 	end
 
@@ -195,7 +108,7 @@ class PlayState < GameState
 		@selected      = @pitch[pos]
 		@action_coords = nil
 		show_movement
-		# @hud.stick @selected
+		@hud.stick @selected
 	end
 
 	def action
@@ -206,7 +119,7 @@ class PlayState < GameState
 					show_path x, y if @selected.can_move_to? x, y
 					@action_coords = [x, y]
 				else
-					if @selected.move_to! x, y or @selected.pass @pitch[[x,y]] or @selected.block @pitch[[x,y]]
+					if @selected.move_to! x, y or @selected.handoff @pitch[[x,y]] or @selected.pass @pitch[[x,y]] or @selected.block @pitch[[x,y]]
 						MovementSquare.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
 					elsif @action_coords == @selected.pos

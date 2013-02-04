@@ -56,9 +56,12 @@ module States
 		true
 	end
 
-	# FIXME : the following condition is not enough, we are missing some cases
 	def can_pass_to? target_player
-		can_move? and @has_ball and target_player and target_player != self  and target_player.team == @team
+		can_move? and @has_ball and not @team.pass? and target_player and target_player != self  and target_player.team == @team and target_player.health == Health::OK
+	end
+
+	def can_handoff_to? target_player
+		can_move? and @has_ball and not @team.handoff? and target_player and target_player != self  and target_player.team == @team and target_player.health == Health::OK and close_to?(target_player)
 	end
 
 	def close_to? player

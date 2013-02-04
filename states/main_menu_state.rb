@@ -2,7 +2,7 @@ require 'chingu'
 include Chingu
 include Gosu
 
-require 'states/menu'
+require 'menu'
 
 class MainMenuState < GameState
 	def setup
