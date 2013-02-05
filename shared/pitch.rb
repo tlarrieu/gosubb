@@ -5,7 +5,6 @@ include Gosu
 require "barrier"
 require "team"
 require "player"
-require "races"
 require "config"
 require "ball"
 
@@ -122,9 +121,7 @@ class Pitch < GameObject
 					:y => y,
 					:pitch => self,
 					:race => race,
-					:role => role,
-					:stats => Races::list[race][role][:stats],
-					:skills => Races::list[race][role][:skills]
+					:role => role
 				)
 			end
 		end

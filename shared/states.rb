@@ -32,7 +32,7 @@ module States
 	def cant_move!
 		@can_move = false
 		@cur_ma   = 0
-		notify_ring_change
+		update_image
 	end
 
 	def has_moved?

@@ -8,12 +8,10 @@ require "ball"
 require "player"
 require "hud"
 require "races"
-require "helpers/cursor"
 
 class PlayState < GameState
 	include Helpers::Measures
 	include Helpers::Barrier
-	include Helpers::Cursor
 	include Helpers::Dices
 
 	attr_reader :teams
@@ -67,7 +65,7 @@ class PlayState < GameState
 		@hud.stick nil
 		@hud.clear
 
-		MovementSquare.destroy_all
+		Square.destroy_all
 
 		@pitch.new_turn!
 	end
@@ -96,10 +94,88 @@ class PlayState < GameState
 			end
 		end
 
-		# Cursor management
-		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		update_cursor :state => :play, :cursor_pos => cursor_pos
+		update_cursor
+	end
 
+	def update_cursor
+		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		if @pitch[cursor_pos]
+			@hud.show @pitch[cursor_pos] # Update HUD
+			if @selected and @selected.team.active?
+				unless @pitch[cursor_pos].team.active?
+					if @selected.can_block? @pitch[cursor_pos]
+						attacker = @selected.stats[:str]
+						defender = @pitch[cursor_pos].stats[:str]
+						highest = [attacker, defender].max
+						lowest  = [attacker, defender].min
+						if attacker >= defender
+							if highest >= 2 * lowest
+								$window.change_cursor :d_3
+							elsif highest > lowest
+								$window.change_cursor :d_2
+							else
+								$window.change_cursor :d_1
+							end
+						else
+							if highest >= 2 * lowest
+								$window.change_cursor :d_3_red
+							elsif highest > lowest
+								$window.change_cursor :d_2_red
+							else
+								$window.change_cursor :d_1_red
+							end
+						end
+					else
+						$window.change_cursor :red
+					end
+				else
+					if @selected == @pitch[cursor_pos]
+						if @selected.can_blitz?
+							$window.change_cursor :blitz
+						else
+							$window.change_cursor :normal
+						end
+					elsif @selected.can_handoff_to? @pitch[cursor_pos]
+						$window.change_cursor :handoff
+					elsif @selected.can_pass_to? @pitch[cursor_pos]
+						$window.change_cursor :ball
+					else
+						$window.change_cursor :normal
+					end
+				end
+			else
+				if @pitch[cursor_pos].team.active?
+					$window.change_cursor :select
+				else
+					$window.change_cursor :red
+				end
+			end
+		else
+			@hud.clear # Update HUD
+			if @pitch.ball.pos == cursor_pos and @selected and @selected.team.active?
+				$window.change_cursor :take
+			else
+				unless @selected and @selected.can_move?and @selected.team.active?
+					$window.change_cursor :normal
+				else
+					roll = false
+					nb_opponents = 0
+					@pitch.active_players_around(@selected.pos).each do |pl|
+						unless pl.team == @selected.team
+							nb_opponents += 1
+						end
+					end
+					if nb_opponents > 0
+						mod  = -nb_opponents
+						mod += 1 if @selected.skills.include? :dodge
+						res  = min_dice_score_required @selected.stats[:agi], mod
+						$window.change_cursor :move, res
+					else
+						$window.change_cursor :move
+					end
+				end
+			end
+		end
 	end
 
 	def select
@@ -120,7 +196,7 @@ class PlayState < GameState
 					@action_coords = [x, y]
 				else
 					if @selected.move_to! x, y or @selected.handoff @pitch[[x,y]] or @selected.pass @pitch[[x,y]] or @selected.block @pitch[[x,y]]
-						MovementSquare.destroy_all
+						Square.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
 					elsif @action_coords == @selected.pos
 						if @selected.stand_up! or @selected. blitz!
@@ -137,7 +213,7 @@ class PlayState < GameState
 	private
 
 	def show_movement
-		MovementSquare.destroy_all
+		Square.destroy_all
 		unless @selected.nil? or @selected.moving?
 			if @selected.team == @pitch.active_team
 				if @selected.can_move?
@@ -160,7 +236,7 @@ class PlayState < GameState
 					c_rect = Rect.new x, y, 1, 1
 					if @pitch[[x,y]].nil? and p_rect.collide_rect? c_rect
 						x, y = to_screen_coords [x,y]
-						MovementSquare.create( :x => x, :y => y, :color => color, :alpha => 180 )
+						Square.create( :x => x, :y => y, :color => color, :alpha => 180 )
 					end
 				end
 			end
@@ -168,12 +244,12 @@ class PlayState < GameState
 	end
 
 	def show_path x, y
-		MovementSquare.destroy_all
+		Square.destroy_all
 		path = a_star @pitch, @selected.pos, [x,y]
 		if path.length <= @selected.cur_ma
 			path.each do |p|
 				i, j = to_screen_coords p
-				MovementSquare.create( :x => i, :y => j, :type => :square, :color => :green )
+				Square.create( :x => i, :y => j, :type => :square, :color => :green )
 			end
 			@action_coords = [x,y]
 		end

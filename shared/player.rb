@@ -7,8 +7,17 @@ require "measures"
 require "dices"
 require "actions"
 require "states"
-require "health"
 require "square"
+require "races"
+
+class Health
+	OK      = 0 # Good shape
+	STUN_0  = 1 # Ready to stand up
+	STUN_1  = 2 # On the back
+	STUN_2  = 3 # On the front
+	KO      = 4 # KO (out of pitch)
+	DEAD    = 5 # Dead (out of pitch)
+end
 
 class Player < GameObject
 	include Helpers::Measures
@@ -44,8 +53,8 @@ class Player < GameObject
 
 		@selected   = false
 
-		@stats      = options[:stats] or raise ArgumentError, "Missing stats for #{self}"
-		@skills     = options[:skills] or raise ArgumentError, "Missing skills for #{self}"
+		@stats      = Races[race][role][:stats]
+		@skills     = Races[race][role][:skills]
 		@has_ball   = options[:has_ball] or false
 		@stage      = options[:stage] or :configure
 		@health     = Health::OK
@@ -68,12 +77,12 @@ class Player < GameObject
 		else
 			@selected = false
 		end
-		notify_ring_change
+		update_image
 	end
 
 	def unselect
 		@selected = false
-		notify_ring_change
+		update_image
 	end
 
 	def new_turn!
@@ -83,7 +92,7 @@ class Player < GameObject
 		@cur_node  = 0
 		@path      = nil
 		@blitz     = false
-		notify_ring_change
+		update_image
 
 		if (Health::STUN_1..Health::STUN_2).member? @health
 			@health -= 1
@@ -177,8 +186,10 @@ class Player < GameObject
 			end
 
 			cant_move! if @cur_ma == 0 and not @blitz and not @has_ball
-			notify_ring_change
+			update_image
 			notify_health_change
+		else
+			update_image
 		end
 	end
 
@@ -229,32 +240,12 @@ class Player < GameObject
 		end
 	end
 
-	def notify_ring_change
-		if @selected
-			set_halo :yellow
-		elsif @team.active?
-			if @can_move then set_halo :green else set_halo :red end
-		else
-			set_halo :none
-		end
-	end
-
-	def set_halo symb
-		raise ArgumentError, "#{symb} is not a Symbol" unless symb.is_a? Symbol
-		unless [:red, :green, :yellow, :none].include? symb
-			raise ArgumentError, "bad parameter. shall be one among : :red, :green, :yellow, :none"
-		end
-
+	def update_image
 		key = "#{@race}/#{@role}#{@team.side}"
-		if @stage == :play
-			case symb
-			when :red
-				key << "-red"
-			when :green
-				key << "-green"
-			when :yellow
-				key << "-yellow"
-			end
+		if @selected
+			key << "-yellow"
+		elsif @team.active?
+			if @can_move then key << "-green" else key << "-red" end
 		end
 		@image = @@loaded[key]
 	end

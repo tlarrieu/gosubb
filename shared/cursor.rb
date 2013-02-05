@@ -1,7 +1,4 @@
-require 'singleton'
-
 class Cursor < GameObject
-
 	def initialize
 		super
 		@list =

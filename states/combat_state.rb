@@ -3,7 +3,6 @@ include Chingu
 include Gosu
 
 require "helpers/dices"
-require "helpers/images"
 require "states/post_combat_state"
 
 # TODO implement reroll
@@ -74,7 +73,6 @@ class CombatState < GameState
 end
 
 class DiceObject < GameObject
-	include Helpers::Images
 	traits :bounding_box
 
 	attr_reader :value
@@ -84,7 +82,17 @@ class DiceObject < GameObject
 		@attacker = options.delete(:attacker)
 		@defender = options.delete(:defender)
 
-		super({:image => dice_image(@value)}.merge(options))
+		valid_symbols = [
+			:attacker_down,
+			:both_down,
+			:pushed,
+			:defender_stumble,
+			:defender_down
+		]
+
+		raise "Invalid argument '#{@value}' for method dice_image" unless valid_symbols.include? @value
+
+		super({:image => "dices/#{@value}.gif"}.merge(options))
 	end
 
 	def select
