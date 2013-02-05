@@ -17,21 +17,21 @@ class PostCombatState < GameState
 		push      = options[:push] || true
 
 		if push and @defender.on_pitch?
-			@areas = {}
-			@areas[[-1, -1]] = [[ 0,  1], [ 1,  0], [ 1,  1]]
-			@areas[[-1,  0]] = [[ 1, -1], [ 1,  0], [ 1,  1]]
-			@areas[[-1,  1]] = [[ 0, -1], [ 1, -1], [ 1,  0]]
-			@areas[[ 0, -1]] = [[-1,  1], [ 0,  1], [ 1,  1]]
-			@areas[[ 0,  1]] = [[-1, -1], [ 0, -1], [ 1, -1]]
-			@areas[[ 1, -1]] = [[-1,  0], [-1,  1], [ 0,  1]]
-			@areas[[ 1,  0]] = [[-1, -1], [-1,  0], [-1,  1]]
-			@areas[[ 1,  1]] = [[-1,  0], [-1, -1], [ 0, -1]]
+			@areas = {
+				[-1, -1] => [[ 0,  1], [ 1,  0], [ 1,  1]],
+				[-1,  0] => [[ 1, -1], [ 1,  0], [ 1,  1]],
+				[-1,  1] => [[ 0, -1], [ 1, -1], [ 1,  0]],
+				[ 0, -1] => [[-1,  1], [ 0,  1], [ 1,  1]],
+				[ 1,  1] => [[-1,  0], [-1, -1], [ 0, -1]],
+				[ 0,  1] => [[-1, -1], [ 0, -1], [ 1, -1]],
+				[ 1, -1] => [[-1,  0], [-1,  1], [ 0,  1]],
+				[ 1,  0] => [[-1, -1], [-1,  0], [-1,  1]]
+			}
 
 			@squares   = []
 			x,y = @defender.pos
-			dx = @attacker.pos[0] - x
-			dy = @attacker.pos[1] - y
-			@areas[[dx,dy]].each do |a,b|
+			corner = [@attacker.pos[0] - x, @attacker.pos[1] - y]
+			@areas[corner].each do |a,b|
 				pos = to_screen_coords [x+a, y+b]
 				@squares << Square.create(:x => pos[0], :y => pos[1], :type => :square, :color => :blue, :zorder => 2)
 			end

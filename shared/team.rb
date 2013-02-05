@@ -109,7 +109,6 @@ class Team
 
 	def active= b
 		@active = b
-		@players.each { |p| p.update_image }
 	end
 
 	def number

@@ -115,9 +115,7 @@ class DiceObject < GameObject
 		end
 		parent.close
 		if push
-			unless @defender.paused
-				parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender
-			end
+			parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender
 		end
 	end
 end

@@ -132,6 +132,8 @@ class PlayState < GameState
 					if @selected == @pitch[cursor_pos]
 						if @selected.can_blitz?
 							$window.change_cursor :blitz
+						elsif @selected.health == Health::STUN_0
+							$window.change_cursor :standup
 						else
 							$window.change_cursor :normal
 						end
