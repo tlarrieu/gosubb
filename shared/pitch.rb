@@ -73,13 +73,21 @@ class Pitch < GameObject
 		end
 	end
 
-	def active_players_around pos
+	def active_players_around pos, filter = :none
+		filter = :none unless self[pos] # Filters have no sense unless there is a player at pos
 		res = []
 		-1.upto 1 do |i|
 			-1.upto 1 do |j|
 				unless i == 0 and i == 0
 					x, y = pos[0] + i, pos[1] + j
-					res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK
+					case filter
+					when :allies
+						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK and self[[x,y]].team == self[pos].team
+					when :opponents
+						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK and self[[x,y]].team != self[pos].team
+					when :none
+						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK
+					end
 				end
 			end
 		end

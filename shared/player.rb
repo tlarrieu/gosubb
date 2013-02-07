@@ -22,6 +22,7 @@ end
 # and to enable easy code folding
 ###
 module PlayerActions
+	include Helpers::Dices
 	# ----------------------
 	# ------- Moves --------
 	# ----------------------
@@ -82,11 +83,12 @@ module PlayerActions
 		if can_pass_to? target_player
 			@can_move, @has_ball = false, false
 
-			case roll_agility @stats[:agi]
+			case roll :pass, target_player.pos
 			when :success
 				x, y = target_player.pos
 				Sample["pass_med.ogg"].play
 				@ball.move_to! x, y
+				target_player.perfect_pass_incoming = true
 				event! :pass
 			when :fumble
 				@ball.scatter!
@@ -99,9 +101,10 @@ module PlayerActions
 					event! :fail
 				end
 			end
-			return @team.pass!
+			@team.pass!
+		else
+			false
 		end
-		return false
 	end
 
 	def handoff target_player
@@ -111,13 +114,15 @@ module PlayerActions
 			Sample["pass_fast.ogg"].play
 			@ball.move_to! x, y
 			event! :pass
-			return @team.handoff!
+			@team.handoff!
+		else
+			false
 		end
-		return false
 	end
 
-	def catch! modifiers=0
-		res = roll_agility @stats[:agi], modifiers
+	def catch!
+		res = roll :catch
+		@perfect_pass_incoming = false
 		if res == :success
 			@has_ball = true
 			event! :catch
@@ -245,11 +250,25 @@ module PlayerStates
 	end
 
 	def can_pass_to? target_player
-		can_move? and @has_ball and not @team.pass? and target_player and target_player != self  and target_player.team == @team and target_player.health == Health::OK
+		res = can_move?
+		res &= @has_ball
+		res &= !@team.pass?
+		res &= target_player
+		res &= target_player != self
+		res &= target_player.team == @team
+		res &= target_player.health == Health::OK
+		res &= dist(self, target_player) <= 10.5
 	end
 
 	def can_handoff_to? target_player
-		can_move? and @has_ball and not @team.handoff? and target_player and target_player != self  and target_player.team == @team and target_player.health == Health::OK and close_to?(target_player)
+		res = can_move?
+		res &= @has_ball
+		res &= !@team.handoff?
+		res &= target_player
+		res &= target_player != self
+		res &= target_player.team == @team
+		res &= target_player.health == Health::OK
+		res &= close_to?(target_player)
 	end
 
 	def close_to? player
@@ -257,7 +276,11 @@ module PlayerStates
 	end
 
 	def can_block? target_player
-		((can_move? and @cur_ma == @stats[:ma]) or @blitz) and target_player and target_player.team != @team and target_player.health == Health::OK and close_to?(target_player)
+		res = ((can_move? and @cur_ma == @stats[:ma]) or @blitz)
+		res &= target_player
+		res &= target_player.team != @team
+		res &= target_player.health == Health::OK
+		res &= close_to?(target_player)
 	end
 
 	def has_ball?
@@ -280,17 +303,70 @@ module PlayerStates
 	def screen_pos
 		[@x,@y]
 	end
+
+	def helping_players target_player
+		res = []
+		@pitch.active_players_around(target_player.pos, :opponents).each do |pl|
+			nb = @pitch.active_players_around(pl.pos, :opponents).count
+			res << pl unless nb > 1 or pl == self
+		end
+		res
+	end
+
+	def nb_block_dices target_player
+		attacker = stats[:str] + helping_players(target_player).length
+		defender = target_player.stats[:str] + target_player.helping_players(self).length
+		highest, lowest = [attacker, defender].max, [attacker, defender].min
+		if attacker >= 2 * defender
+			return 3
+		elsif attacker > defender
+			return 2
+		elsif attacker == defender
+			return 1
+		elsif defender >= 2 * attacker
+			return -3
+		elsif defender > attacker
+			return -2
+		end
+	end
+
+	def evaluate action, dest_pos=nil
+		mod = 0
+		nb_opponents = 0
+		@pitch.active_players_around(pos).each { |pl| nb_opponents += 1 unless pl.team == @team }
+		case action
+		when :move
+			return 0 unless nb_opponents > 0
+			mod += 1 if @skills.include? :dodge
+		when :handoff
+			return 0
+		when :pass
+			# Get information about reach rule
+			dist = dist pos, dest_pos
+			if dist <= 3.5
+				mod += 1
+			elsif dist > 7 and dist <= 10.5
+				mod -= 1
+			elsif dist > 10.5
+				return :toofar
+			end
+		when :catch
+		when :pickup
+			mod += 1
+		end
+		[[7 - (@stats[:agi] + mod) + nb_opponents, 1].max, 6].min
+	end
 end
 
 class Player < GameObject
 	include Helpers::Measures
-	include Helpers::Dices
 
 	include PlayerActions
 	include PlayerStates
 
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :skills, :race, :role, :health
+	attr_accessor :perfect_pass_incoming
 
 	@@loaded = {}
 
@@ -405,7 +481,7 @@ class Player < GameObject
 				count = 0
 				@pitch.active_players_around(pos).each { |p| count += 1 if p.team != @team }
 				if count > 0
-					unless roll_agility(@stats[:agi]) == :success
+					unless roll :move == :success
 						injure!
 						@has_left_square = false
 						@path = nil

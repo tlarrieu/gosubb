@@ -25,6 +25,7 @@ class Cursor < GameObject
 
 		@secondary_list =
 		{
+			0 => nil,
 			1 => Image["cursors/plus_one.png"],
 			2 => Image["cursors/plus_two.png"],
 			3 => Image["cursors/plus_three.png"],

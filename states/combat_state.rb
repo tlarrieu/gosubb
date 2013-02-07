@@ -16,15 +16,8 @@ class CombatState < GameState
 
 		@attacker = options[:attacker]
 		@defender = options[:defender]
-		highest = [@attacker.stats[:str], @defender.stats[:str]].max
-		lowest  = [@attacker.stats[:str], @defender.stats[:str]].min
-		nb_dices = if highest >= 2 * lowest
-			3
-		elsif highest > lowest
-			2
-		else
-			1
-		end
+
+		nb_dices = @attacker.nb_block_dices(@defender).abs
 
 		x = ($window.width - (nb_dices - 1) * 50) / 2.0
 		y = ($window.height - 37) / 2.0
@@ -32,13 +25,13 @@ class CombatState < GameState
 		@dices = []
 		nb_dices.times do
 			@dices << DiceObject.create(
-			                            :value => roll(:block),
-			                            :x => x,
-			                            :y => y,
-			                            :zorder => 201,
-			                            :defender => @defender,
-			                            :attacker => @attacker,
-			                           )
+				:value => roll(:block),
+				:x => x,
+				:y => y,
+				:zorder => 201,
+				:defender => @defender,
+				:attacker => @attacker,
+			)
 			x += 50
 		end
 
@@ -101,8 +94,8 @@ class DiceObject < GameObject
 		when :attacker_down
 			@defender.down @attacker
 		when :both_down
-			@attacker.down @defender
-			@defender.down @attacker
+			@attacker.down @defender unless @defender.skills.include? :block
+			@defender.down @attacker unless @attacker.skills.include? :block
 		when :defender_stumble
 			@attacker.stumble @defender
 			push = true

@@ -104,26 +104,21 @@ class PlayState < GameState
 			if @selected and @selected.team.active?
 				unless @pitch[cursor_pos].team.active?
 					if @selected.can_block? @pitch[cursor_pos]
-						attacker = @selected.stats[:str]
-						defender = @pitch[cursor_pos].stats[:str]
-						highest = [attacker, defender].max
-						lowest  = [attacker, defender].min
-						if attacker >= defender
-							if highest >= 2 * lowest
-								$window.change_cursor :d_3
-							elsif highest > lowest
-								$window.change_cursor :d_2
-							else
-								$window.change_cursor :d_1
-							end
-						else
-							if highest >= 2 * lowest
-								$window.change_cursor :d_3_red
-							elsif highest > lowest
-								$window.change_cursor :d_2_red
-							else
+						attacker = @selected
+						defender = @pitch[cursor_pos]
+						case attacker.nb_block_dices(defender)
+						when 3
+							$window.change_cursor :d_3
+						when 2
+							$window.change_cursor :d_2
+						when 1
+							$window.change_cursor :d_1
+						when -1
 								$window.change_cursor :d_1_red
-							end
+						when -2
+							$window.change_cursor :d_2_red
+						when -3
+							$window.change_cursor :d_3_red
 						end
 					else
 						$window.change_cursor :red
@@ -140,7 +135,7 @@ class PlayState < GameState
 					elsif @selected.can_handoff_to? @pitch[cursor_pos]
 						$window.change_cursor :handoff
 					elsif @selected.can_pass_to? @pitch[cursor_pos]
-						$window.change_cursor :ball
+						$window.change_cursor :ball, @selected.evaluate(:pass, cursor_pos)
 					else
 						$window.change_cursor :normal
 					end
@@ -160,21 +155,7 @@ class PlayState < GameState
 				unless @selected and @selected.can_move?and @selected.team.active?
 					$window.change_cursor :normal
 				else
-					roll = false
-					nb_opponents = 0
-					@pitch.active_players_around(@selected.pos).each do |pl|
-						unless pl.team == @selected.team
-							nb_opponents += 1
-						end
-					end
-					if nb_opponents > 0
-						mod  = -nb_opponents
-						mod += 1 if @selected.skills.include? :dodge
-						res  = min_dice_score_required @selected.stats[:agi], mod
-						$window.change_cursor :move, res
-					else
-						$window.change_cursor :move
-					end
+					$window.change_cursor :move, @selected.evaluate(:move, cursor_pos)
 				end
 			end
 		end
