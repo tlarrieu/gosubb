@@ -80,22 +80,20 @@ class Pitch < GameObject
 			-1.upto 1 do |j|
 				unless i == 0 and i == 0
 					x, y = pos[0] + i, pos[1] + j
-					case filter
-					when :allies
-						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK and self[[x,y]].team == self[pos].team
-					when :opponents
-						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK and self[[x,y]].team != self[pos].team
-					when :none
-						res << self[[x,y]] if self[[x,y]] and self[[x,y]].health == Health::OK
+					if self[[x,y]] and self[[x,y]].health == Health::OK
+						case filter
+						when :allies
+							res << self[[x,y]] if self[[x,y]].team == self[pos].team
+						when :opponents
+							res << self[[x,y]] unless self[[x,y]].team == self[pos].team
+						when :none
+							res << self[[x,y]]
+						end
 					end
 				end
 			end
 		end
 		res
-	end
-
-	def each_active_players_around pos, &block
-		active_players_around(pos).each { |p| yield p }
 	end
 
 	def active_team= team

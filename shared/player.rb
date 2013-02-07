@@ -332,8 +332,7 @@ module PlayerStates
 
 	def evaluate action, dest_pos=nil
 		mod = 0
-		nb_opponents = 0
-		@pitch.active_players_around(pos).each { |pl| nb_opponents += 1 unless pl.team == @team }
+		nb_opponents = @pitch.active_players_around(pos, :opponents).count
 		case action
 		when :move
 			return 0 unless nb_opponents > 0
@@ -478,9 +477,7 @@ class Player < GameObject
 
 			unless @has_left_square or @untackleable
 				@has_left_square = true
-				count = 0
-				@pitch.active_players_around(pos).each { |p| count += 1 if p.team != @team }
-				if count > 0
+				if @pitch.active_players_around(pos, :opponents).count > 0
 					unless roll :move == :success
 						injure!
 						@has_left_square = false

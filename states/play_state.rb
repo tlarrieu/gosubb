@@ -99,13 +99,15 @@ class PlayState < GameState
 
 	def update_cursor
 		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		if @pitch[cursor_pos]
-			@hud.show @pitch[cursor_pos] # Update HUD
+		return if cursor_pos == @cursor_pos
+		@cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		if @pitch[@cursor_pos]
+			@hud.show @pitch[@cursor_pos] # Update HUD
 			if @selected and @selected.team.active?
-				unless @pitch[cursor_pos].team.active?
-					if @selected.can_block? @pitch[cursor_pos]
+				unless @pitch[@cursor_pos].team.active?
+					if @selected.can_block? @pitch[@cursor_pos]
 						attacker = @selected
-						defender = @pitch[cursor_pos]
+						defender = @pitch[@cursor_pos]
 						case attacker.nb_block_dices(defender)
 						when 3
 							$window.change_cursor :d_3
@@ -124,7 +126,7 @@ class PlayState < GameState
 						$window.change_cursor :red
 					end
 				else
-					if @selected == @pitch[cursor_pos]
+					if @selected == @pitch[@cursor_pos]
 						if @selected.can_blitz?
 							$window.change_cursor :blitz
 						elsif @selected.health == Health::STUN_0
@@ -132,16 +134,16 @@ class PlayState < GameState
 						else
 							$window.change_cursor :normal
 						end
-					elsif @selected.can_handoff_to? @pitch[cursor_pos]
+					elsif @selected.can_handoff_to? @pitch[@cursor_pos]
 						$window.change_cursor :handoff
-					elsif @selected.can_pass_to? @pitch[cursor_pos]
-						$window.change_cursor :ball, @selected.evaluate(:pass, cursor_pos)
+					elsif @selected.can_pass_to? @pitch[@cursor_pos]
+						$window.change_cursor :ball, @selected.evaluate(:pass, @cursor_pos)
 					else
 						$window.change_cursor :normal
 					end
 				end
 			else
-				if @pitch[cursor_pos].team.active?
+				if @pitch[@cursor_pos].team.active?
 					$window.change_cursor :select
 				else
 					$window.change_cursor :red
@@ -149,13 +151,13 @@ class PlayState < GameState
 			end
 		else
 			@hud.clear # Update HUD
-			if @pitch.ball.pos == cursor_pos and @selected and @selected.team.active?
+			if @pitch.ball.pos == @cursor_pos and @selected and @selected.team.active?
 				$window.change_cursor :take
 			else
 				unless @selected and @selected.can_move?and @selected.team.active?
 					$window.change_cursor :normal
 				else
-					$window.change_cursor :move, @selected.evaluate(:move, cursor_pos)
+					$window.change_cursor :move, @selected.evaluate(:move, @cursor_pos)
 				end
 			end
 		end
