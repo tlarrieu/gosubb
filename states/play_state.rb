@@ -99,15 +99,16 @@ class PlayState < GameState
 
 	def update_cursor
 		cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		return if cursor_pos == @cursor_pos
-		@cursor_pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
+		return if cursor_pos == @cursor_pos # Nothing to do if we did not move the cursor far enough to have to update it
+		@cursor_pos = cursor_pos
 		if @pitch[@cursor_pos]
-			@hud.show @pitch[@cursor_pos] # Update HUD
+			overred =  @pitch[@cursor_pos]
+			@hud.show overred # Update HUD
 			if @selected and @selected.team.active?
-				unless @pitch[@cursor_pos].team.active?
-					if @selected.can_block? @pitch[@cursor_pos]
+				unless overred.team.active?
+					if @selected.could_block? overred
 						attacker = @selected
-						defender = @pitch[@cursor_pos]
+						defender = overred
 						case attacker.nb_block_dices(defender)
 						when 3
 							$window.change_cursor :d_3
@@ -126,7 +127,7 @@ class PlayState < GameState
 						$window.change_cursor :red
 					end
 				else
-					if @selected == @pitch[@cursor_pos]
+					if @selected == overred
 						if @selected.can_blitz?
 							$window.change_cursor :blitz
 						elsif @selected.health == Health::STUN_0
@@ -134,16 +135,16 @@ class PlayState < GameState
 						else
 							$window.change_cursor :normal
 						end
-					elsif @selected.can_handoff_to? @pitch[@cursor_pos]
+					elsif @selected.can_handoff_to? overred
 						$window.change_cursor :handoff
-					elsif @selected.can_pass_to? @pitch[@cursor_pos]
+					elsif @selected.can_pass_to? overred
 						$window.change_cursor :ball, @selected.evaluate(:pass, @cursor_pos)
 					else
 						$window.change_cursor :normal
 					end
 				end
 			else
-				if @pitch[@cursor_pos].team.active?
+				if overred.team.active?
 					$window.change_cursor :select
 				else
 					$window.change_cursor :red

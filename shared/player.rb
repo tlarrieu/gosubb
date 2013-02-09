@@ -8,6 +8,7 @@ require "dices"
 require "square"
 require "races"
 
+# A very simple class to represent a player's health
 class Health
 	OK      = 0 # Good shape
 	STUN_0  = 1 # Ready to stand up
@@ -276,11 +277,15 @@ module PlayerStates
 	end
 
 	def can_block? target_player
+		res = could_block? target_player
+		res &= close_to?(target_player)
+	end
+
+	def could_block? target_player
 		res = ((can_move? and @cur_ma == @stats[:ma]) or @blitz)
 		res &= target_player
 		res &= target_player.team != @team
 		res &= target_player.health == Health::OK
-		res &= close_to?(target_player)
 	end
 
 	def has_ball?
@@ -375,6 +380,7 @@ class Player < GameObject
 		@pitch      = options[:pitch] or raise ArgumentError, "Unable to fetch pitch for #{self}"
 		@race       = options[:race]  or raise ArgumentError, "You did not specifiy a race for #{self}"
 		@role       = options[:role]  or raise ArgumentError, "You did not specifiy a role for #{self}"
+		# Loading a bunch of image if needed, including every possible states for the player
 		key = "#{race}/#{role}#{@team.side}"
 		unless @@loaded[key]
 			["-yellow", "-red", "-green", ""].each do |color|

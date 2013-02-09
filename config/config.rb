@@ -1,4 +1,6 @@
 require 'singleton'
+# We could get a better form for this class
+# Maybe make it static so that we can access Configuration[...] directly
 class Configuration < Hash
 	include Singleton
 
