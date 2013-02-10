@@ -107,22 +107,7 @@ class PlayState < GameState
 			if @selected and @selected.team.active?
 				unless overred.team.active?
 					if @selected.could_block? overred
-						attacker = @selected
-						defender = overred
-						case attacker.nb_block_dices(defender)
-						when 3
-							$window.change_cursor :d_3
-						when 2
-							$window.change_cursor :d_2
-						when 1
-							$window.change_cursor :d_1
-						when -1
-								$window.change_cursor :d_1_red
-						when -2
-							$window.change_cursor :d_2_red
-						when -3
-							$window.change_cursor :d_3_red
-						end
+						$window.change_cursor @selected.nb_block_dices(overred)
 					else
 						$window.change_cursor :red
 					end
@@ -181,13 +166,14 @@ class PlayState < GameState
 					show_path x, y if @selected.can_move_to? x, y
 					@action_coords = [x, y]
 				else
-					if @selected.move_to! x, y or @selected.handoff @pitch[[x,y]] or @selected.pass @pitch[[x,y]] or @selected.block @pitch[[x,y]]
+					if @selected.move_to! x, y or
+						@selected.handoff @pitch[[x,y]] or
+						@selected.pass @pitch[[x,y]] or
+						@selected.block @pitch[[x,y]] or
+						(@action_coords == @selected.pos and (@selected.stand_up! or @selected. blitz!))
+
 						Square.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
-					elsif @action_coords == @selected.pos
-						if @selected.stand_up! or @selected. blitz!
-							@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
-						end
 					end
 					@action_coords = nil
 					show_movement

@@ -24,9 +24,9 @@ end
 ###
 module PlayerActions
 	include Helpers::Dices
-	# ----------------------
-	# ------- Moves --------
-	# ----------------------
+	# ++++++++++++++++++++++
+	# Moves
+	# ++++++++++++++++++++++
 
 	def move_to! x, y
 		return false unless can_move_to?(x, y)
@@ -76,9 +76,9 @@ module PlayerActions
 		end
 	end
 
-	# ----------------------
-	# ---- Ball Handling ---
-	# ----------------------
+	# ++++++++++++++++++++++
+	# Ball Handling
+	# ++++++++++++++++++++++
 
 	def pass target_player
 		if can_pass_to? target_player
@@ -142,9 +142,9 @@ module PlayerActions
 		end
 	end
 
-	# ----------------------
-	# ------- Fight --------
-	# ----------------------
+	# ++++++++++++++++++++++
+	# Fight
+	# ++++++++++++++++++++++
 
 	def tackle
 		end_turn
@@ -201,6 +201,57 @@ module PlayerStates
 		stats[symb]
 	end
 
+	# +++++++++++++++++
+	# Ball management
+	# +++++++++++++++++
+
+	def can_pass_to? target_player
+		res = can_move?
+		res &= @has_ball
+		res &= !@team.pass?
+		res &= target_player
+		res &= target_player != self
+		res &= target_player.team == @team
+		res &= target_player.health == Health::OK
+		res &= dist(self, target_player) <= 10.5
+	end
+
+	def can_handoff_to? target_player
+		res = can_move?
+		res &= @has_ball
+		res &= !@team.handoff?
+		res &= target_player
+		res &= target_player != self
+		res &= target_player.team == @team
+		res &= target_player.health == Health::OK
+		res &= close_to?(target_player)
+	end
+
+	def has_ball?
+		@has_ball
+	end
+
+	# +++++++++++++++++
+	# Position / Movement
+	# +++++++++++++++++
+
+	def can_blitz?
+		not @team.blitz? and @stats[:ma] == @cur_ma and @health == Health::OK
+	end
+
+	def stuck?
+		(-1..1).each do |x|
+			(-1..1).each do |y|
+				unless x == 0 and y == 0
+					key = [pos, [x,y]].transpose.map { |c| c.reduce(:+) }
+					return false if @pitch[key].nil?
+				end
+			end
+		end
+
+		true
+	end
+
 	def moving?
 		return [@target_x, @target_y] != [@x, @y]
 	end
@@ -237,63 +288,8 @@ module PlayerStates
 		@has_moved = true
 	end
 
-	def stuck?
-		(-1..1).each do |x|
-			(-1..1).each do |y|
-				unless x == 0 and y == 0
-					key = [pos, [x,y]].transpose.map { |c| c.reduce(:+) }
-					return false if @pitch[key].nil?
-				end
-			end
-		end
-
-		true
-	end
-
-	def can_pass_to? target_player
-		res = can_move?
-		res &= @has_ball
-		res &= !@team.pass?
-		res &= target_player
-		res &= target_player != self
-		res &= target_player.team == @team
-		res &= target_player.health == Health::OK
-		res &= dist(self, target_player) <= 10.5
-	end
-
-	def can_handoff_to? target_player
-		res = can_move?
-		res &= @has_ball
-		res &= !@team.handoff?
-		res &= target_player
-		res &= target_player != self
-		res &= target_player.team == @team
-		res &= target_player.health == Health::OK
-		res &= close_to?(target_player)
-	end
-
 	def close_to? player
 		return dist(self, player, :infinity) == 1
-	end
-
-	def can_block? target_player
-		res = could_block? target_player
-		res &= close_to?(target_player)
-	end
-
-	def could_block? target_player
-		res = ((can_move? and @cur_ma == @stats[:ma]) or @blitz)
-		res &= target_player
-		res &= target_player.team != @team
-		res &= target_player.health == Health::OK
-	end
-
-	def has_ball?
-		@has_ball
-	end
-
-	def can_blitz?
-		not @team.blitz? and @stats[:ma] == @cur_ma and @health == Health::OK
 	end
 
 	def on_pitch?
@@ -307,6 +303,22 @@ module PlayerStates
 
 	def screen_pos
 		[@x,@y]
+	end
+
+	# +++++++++++++++++
+	# Fight
+	# +++++++++++++++++
+
+	def can_block? target_player
+		res = could_block? target_player
+		res &= close_to?(target_player)
+	end
+
+	def could_block? target_player
+		res = ((can_move? and @cur_ma == @stats[:ma]) or @blitz)
+		res &= target_player
+		res &= target_player.team != @team
+		res &= target_player.health == Health::OK
 	end
 
 	def helping_players target_player
@@ -421,7 +433,7 @@ class Player < GameObject
 		if to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
 			@selected = true
 		else
-			@selected = false
+			unselect
 		end
 	end
 
@@ -496,7 +508,6 @@ class Player < GameObject
 			end
 
 			vx, vy = 0, 0
-
 			vx = (t_pos[0] - c_pos[0]) / (t_pos[0] - c_pos[0]).abs * @velocity * ms unless c_pos[0] == t_pos[0]
 			vy = (t_pos[1] - c_pos[1]) / (t_pos[1] - c_pos[1]).abs * @velocity * ms unless c_pos[1] == t_pos[1]
 
