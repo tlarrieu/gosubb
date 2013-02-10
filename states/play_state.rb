@@ -21,7 +21,12 @@ class PlayState < GameState
 		super
 		@sound       = Sample["turnover.ogg"]
 
-		self.input   = { :mouse_right => :action, :mouse_left => :select, :space => lambda{ @pitch.turnover! }, :escape => :show_menu }
+		self.input   = {
+			:mouse_right => :action,
+			:mouse_left => :select,
+			:space => lambda{ @pitch.turnover! },
+			:escape => :show_menu
+		}
 
 		@pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
 		add_game_object @pitch
@@ -156,6 +161,7 @@ class PlayState < GameState
 		@action_coords = nil
 		show_movement
 		@hud.stick @selected
+		@cursor_pos = nil # Force cursor refresh
 	end
 
 	def action
@@ -176,6 +182,7 @@ class PlayState < GameState
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
 					end
 					@action_coords = nil
+					@cursor_pos = nil # force cursor refresh
 					show_movement
 				end
 			end
@@ -221,7 +228,7 @@ class PlayState < GameState
 		if path.length <= @selected.cur_ma
 			path.each do |p|
 				i, j = to_screen_coords p
-				Square.create( :x => i, :y => j, :type => :square, :color => :green )
+				Square.create :x => i, :y => j, :type => :square, :color => :green
 			end
 			@action_coords = [x,y]
 		end
