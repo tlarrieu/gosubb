@@ -34,3 +34,14 @@ RUN
 Just run main.rb. If you are lazy enough, you can also call rake at the root of the project, which will run it for you!
 
 /!\ The project has only been tested with ruby-1.9.3, gosu-0.7.45 and chingu-0.8.1.
+
+/!\ The first screen displayed is not yet fully functionnal. It will be used to setup teams before kick-off.
+As for now, just hit enter to avoid this step.
+
+Keys :
+- Esc : displays main menu
+- Space : end turn
+- Left-click : select a player / unselect current player (if pointing on an empty square)
+- Right-click : request an action
+- Right-click (again) : if requesting the same action twice, performs the action (this is a « security »
+to avoid misclicks)
