@@ -29,20 +29,12 @@ class Pitch < GameObject
 		@y      = 15
 		@zorder = 1
 		rotation_center(:top_left)
-
-		@teams = []
-		@teams << Team.new( :name => "TROLOLOL", :active => true, :side => :A, :pitch => self )
-		@teams << Team.new( :name => "OTAILLO", :side => :B, :pitch => self )
-
-		load
 	end
 
 	def start_new_game ball
 		raise ArgumentError unless ball.is_a? Ball
 		@ball = ball
 		each { |p| p.set_stage :stage => :play, :ball => @ball }
-		@active_team = @teams[0]
-		@active_team.new_turn!
 	end
 
 	def new_turn!
@@ -61,7 +53,7 @@ class Pitch < GameObject
 	end
 
 	def [] pos
-		@teams.each { |t| return t[pos] unless t[pos].paused? if t[pos]}
+		@teams.each { |t| return t[pos] if t[pos]}
 		nil
 	end
 
@@ -96,12 +88,6 @@ class Pitch < GameObject
 		res
 	end
 
-	def active_team= team
-		@teams.each { |t| t.active = false }
-		@active_team = team
-		@active_team.new_turn!
-	end
-
 	def unlock
 		super
 		@unlock_listener.call if @unlock_listener
@@ -111,16 +97,13 @@ class Pitch < GameObject
 		@unlock_listener = block
 	end
 
-	# Since we do not load it statically anymore, this seems to take much more time.
-	# We shall watch by there if we can improve this
-	def load
-		Configuration.instance[:teams].each do |team|
+	def load teams
+		@teams = teams
+		Configuration[:teams].each do |num, team|
 			race = team[:race]
-			num  = team[:num]
 			team[:players].each do |player|
 				role = player[:role]
-				pos  = player[:pos]
-				x, y = pos
+				x, y  = player[:pos]
 				@teams[num] << Player.create(
 					:team => @teams[num],
 					:x => x,
@@ -131,5 +114,7 @@ class Pitch < GameObject
 				)
 			end
 		end
+		@teams.each { |t| @active_team = t if t.active? }
+		@active_team.new_turn!
 	end
 end

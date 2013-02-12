@@ -396,7 +396,7 @@ class Player < GameObject
 		key = "#{race}/#{role}#{@team.side}"
 		unless @@loaded[key]
 			["-yellow", "-red", "-green", ""].each do |color|
-				@@loaded[key + color] = @@loaded[key] = Image["teams/#{race}/#{role}#{@team.side}#{color}.png"]
+				@@loaded[key + color]  = Image["teams/#{race}/#{role}#{@team.side}#{color}.png"]
 			end
 		end
 		@image = @@loaded[key]
@@ -457,8 +457,8 @@ class Player < GameObject
 
 	def draw
 		if on_pitch?
-			@health_image.draw @x + @image.width / 2 - @health_image.width - 2, @y + @image.height / 2 - @health_image.height - 2, @zorder + 1 if @health_image
 			super
+			@health_image.draw @x + @image.width / 2 - @health_image.width - 2, @y + @image.height / 2 - @health_image.height - 2, @zorder + 1 if @health_image
 		end
 	end
 

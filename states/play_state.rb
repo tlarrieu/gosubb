@@ -37,7 +37,6 @@ class PlayState < GameState
 		end
 		@pitch.on_unlock { show_movement }
 
-
 		@action_coords = nil
 		@selected      = nil
 		@last_selected = nil
@@ -181,6 +180,7 @@ class PlayState < GameState
 						Square.destroy_all
 						@last_selected.cant_move! if @last_selected and @last_selected.has_moved? unless @last_selected == @selected
 					end
+
 					@action_coords = nil
 					@cursor_pos = nil # force cursor refresh
 					show_movement

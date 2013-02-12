@@ -23,7 +23,6 @@ module Dices
 			elsif score == 1
 				return :fumble
 			else
-				score += modifs
 				if score >= evaluate(type, dest_pos)
 					return :success
 				else

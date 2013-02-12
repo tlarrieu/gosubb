@@ -4,18 +4,24 @@ include Chingu
 
 class Team
 	attr_accessor :time, :active
-	attr_reader   :side
+	attr_reader   :side, :image, :race, :points
+	alias :score :points
+
+	@@loaded = {}
 
 	def initialize options = {}
 		@name   = options[:name]   || ""
 		@ai     = options[:ai]     || false
-		@image  = options[:image]
 
 		@active = options[:active] || false
 
 		@side   = options[:side]   || :A
+		@race   = options[:race]   || raise(ArgumentError, "You did not specify a race for #{self}")
 
-		@pitch  = options[:pitch]  || raise(ArgumentError, "You did not specify a pitch for #{self}")
+		@@loaded[@race] = Image["teams/logos/#{@race}.gif"] unless @@loaded[@race]
+		@image  = @@loaded[@race]
+
+		@pitch = options[:pitch]   || raise(ArgumentError, "You did not specify a pitch for #{self}")
 
 		@players = []
 
@@ -95,20 +101,12 @@ class Team
 		end
 	end
 
-	def score
-		@points
-	end
-
 	def turn
 		@turn
 	end
 
 	def active?
 		@active
-	end
-
-	def active= b
-		@active = b
 	end
 
 	def number
