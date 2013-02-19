@@ -83,11 +83,11 @@ class PrePeriodState < GameState
 			misplaced_players = 0
 			team.each do |pl|
 				x, y = pl.pos
-				if (x > 12 && team.side == :A) || (x < 13 && team.side == :B)
+				if (x > 12 && team.side == :A) or (x < 13 && team.side == :B)
 					misplaced_players += 1
 				elsif y < 4
 					top_players += 1
-				elsif y <= 10 and x == 12
+				elsif y <= 10 and ((x == 12 and team.side == :A) or (x == 13 and team.side == :B))
 					middle_players += 1
 				elsif y > 10
 					bottom_players += 1
@@ -98,7 +98,7 @@ class PrePeriodState < GameState
 				valid = false
 				params = { :x => 20, :y => 870, :color => 0xFF0000FF, :zorder => 1000, :rotation_center => :center_left }
 				if team.side == :B
-					params.merge :x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000
+					params = params.merge({:x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000})
 				end
 
 				if top_players < 2
