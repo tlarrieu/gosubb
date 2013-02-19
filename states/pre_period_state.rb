@@ -98,7 +98,7 @@ class PrePeriodState < GameState
 				valid = false
 				params = { :x => 20, :y => 870, :color => 0xFF0000FF, :zorder => 1000, :rotation_center => :center_left }
 				if team.side == :B
-					params = params.merge({:x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000})
+					params.merge! :x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000
 				end
 
 				if top_players < 2
