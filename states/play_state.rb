@@ -30,11 +30,7 @@ class PlayState < GameState
 
 		@pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
 		add_game_object @pitch
-		@pitch.each do |p|
-			p.parent = self
-			add_game_object p
-			p.input = { :mouse_left => lambda { p.select }}
-		end
+		@pitch.each { |p| add_game_object p }
 		@pitch.on_unlock { show_movement }
 
 		@action_coords = nil
@@ -155,8 +151,12 @@ class PlayState < GameState
 
 	def select
 		pos = to_pitch_coords [$window.mouse_x, $window.mouse_y]
-		@last_selected = @selected if @selected
+		if @selected
+			@selected.unselect
+			@last_selected = @selected
+		end
 		@selected      = @pitch[pos]
+		@selected.select if @selected
 		@action_coords = nil
 		show_movement
 		@hud.stick @selected
@@ -194,7 +194,7 @@ class PlayState < GameState
 	def show_movement
 		Square.destroy_all
 		unless @selected.nil? or @selected.moving?
-			if @selected.team == @pitch.active_team
+			if @selected.team.active?
 				if @selected.can_move?
 					w, color = @selected.cur_ma, :green
 				else

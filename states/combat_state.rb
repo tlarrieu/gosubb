@@ -94,8 +94,16 @@ class DiceObject < GameObject
 		when :attacker_down
 			@defender.down @attacker
 		when :both_down
-			@attacker.down @defender unless @defender.skills.include? :block
-			@defender.down @attacker unless @attacker.skills.include? :block
+			if @defender.skills.include? :block
+				@defender.event! :block
+			else
+				@attacker.down @defender
+			end
+			if @attacker.skills.include? :block
+				@attacker.event! :block
+			else
+				@defender.down @attacker
+			end
 		when :defender_stumble
 			@attacker.stumble @defender
 			push = true
@@ -107,8 +115,6 @@ class DiceObject < GameObject
 			push = true
 		end
 		parent.close
-		if push
-			parent.push_game_state PostCombatState.new :attacker => @attacker, :defender => @defender
-		end
+		parent.push_game_state PostCombatState.new(:attacker => @attacker, :defender => @defender) if push
 	end
 end

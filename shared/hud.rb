@@ -11,8 +11,6 @@ class HUD < GameObject
 		@width  = $window.width
 		@height = 200
 
-		teams  = options[:teams] || raise(ArgumentError, "Missing argument :teams")
-		pitch  = options[:pitch] || raise(ArgumentError, "Missing argument :pitch")
 
 		@bg = Image["hud2.png"]
 
@@ -21,18 +19,22 @@ class HUD < GameObject
 		center_x = @x + @width / 2.0
 		center_y = @y + @height / 2.0 + 20
 
-		TeamBlock.create :team => teams[0],
-						 :x => @x + 20,
-						 :y => center_y,
-						 :color => Gosu::Color::BLUE,
-						 :pitch => pitch
+		teams  = options[:teams]
+		if teams
+			pitch  = options[:pitch] || raise(ArgumentError, "Missing argument :pitch")
+			TeamBlock.create :team => teams[0],
+				 :x => @x + 20,
+				 :y => center_y,
+				 :color => Gosu::Color::BLUE,
+				 :pitch => pitch
 
-		TeamBlock.create :team => teams[1],
-						 :x => @x + @width - 20,
-						 :y => center_y,
-						 :color => Gosu::Color::RED,
-						 :rotation_center => :center_right,
-						 :pitch => pitch
+			TeamBlock.create :team => teams[1],
+				 :x => @x + @width - 20,
+				 :y => center_y,
+				 :color => Gosu::Color::RED,
+				 :rotation_center => :center_right,
+				 :pitch => pitch
+		end
 
 		@player_block = PlayerBlock.create :x => center_x, :y => center_y
 	end
@@ -47,8 +49,7 @@ class HUD < GameObject
 	end
 
 	def show player
-		raise ArgumentError, "Wrong parameter for method 'show'. Expected a player but received a #{player.class}" unless player.is_a? Player
-
+		raise ArgumentError, "Wrong parameter for method 'show'. Expected a player but received a #{player.class}" unless player.is_a? Player or player.nil?
 		@player_block.set player
 	end
 

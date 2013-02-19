@@ -18,7 +18,6 @@ class PreMatchState < GameState
 		@teams = options[:teams]
 		unless @teams
 			@teams = []
-			puts Configuration[:teams][0][:race]
 			@teams << Team.new( :name => "TROLOLOL", :race => Configuration[:teams][0][:race], :side => :A, :pitch => @pitch )
 			@teams << Team.new( :name => "OTAILLO", :race => Configuration[:teams][1][:race], :side => :B, :pitch => @pitch )
 		end

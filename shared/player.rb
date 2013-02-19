@@ -253,6 +253,7 @@ module PlayerStates
 	end
 
 	def moving?
+		return false unless @target_x and @target_y
 		return [@target_x, @target_y] != [@x, @y]
 	end
 
@@ -382,7 +383,7 @@ class Player < GameObject
 
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :skills, :race, :role, :health
-	attr_accessor :perfect_pass_incoming
+	attr_accessor :perfect_pass_incoming, :x, :y
 
 	@@loaded = {}
 
@@ -404,13 +405,9 @@ class Player < GameObject
 			@@loaded[:health] = {:red => Image["health_red.png"], :yellow => Image["health_yellow.png"], :green => Image["health_green.png"]}
 		end
 		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
-		@target_x   = @x
-		@target_y   = @y
 		@velocity   = 0.23
 
 		@footsteps  = Sample["footsteps.ogg"]
-
-		@selected   = false
 
 		@stats      = Races[race][role][:stats]
 		@skills     = Races[race][role][:skills]
@@ -430,11 +427,7 @@ class Player < GameObject
 	end
 
 	def select
-		if to_pitch_coords( [ $window.mouse_x, $window.mouse_y ] ) == pos
-			@selected = true
-		else
-			unselect
-		end
+		@selected = true
 	end
 
 	def unselect
@@ -462,29 +455,48 @@ class Player < GameObject
 		end
 	end
 
+	def update_halo
+		# key = "#{@race}/#{@role}#{@team.side}"
+		if @selected
+			# key << "-yellow"
+			set_halo :yellow
+		elsif @team.active? and @stage == :play
+			# if can_move? then key << "-green" else key << "-red" end
+			if can_move? then set_halo :green else set_halo :red end
+		else
+			set_halo :none
+		end
+		# @image = @@loaded[key]
+	end
+
+	def set_halo value
+		authorized = [:yellow, :red, :green, :none]
+		raise ArgumentError, "key must be one of the following : #{authorized.inspect}" unless authorized.include? value
+		key = "#{@race}/#{@role}#{@team.side}"
+		unless value == :none
+			key << "-#{value}"
+		end
+		@image = @@loaded[key]
+	end
+
+	def update_health_bar
+		case @health
+		when Health::STUN_2
+			@health_image = @@loaded[:health][:red]
+		when Health::STUN_1
+			@health_image = @@loaded[:health][:yellow]
+		when Health::STUN_0
+			@health_image = @@loaded[:health][:green]
+		else
+			@health_image = nil
+		end
+	end
+
 	def update
 		super
 		# Image update
-		if @stage == :play
-			key = "#{@race}/#{@role}#{@team.side}"
-			if @selected
-				key << "-yellow"
-			elsif @team.active?
-				if @can_move then key << "-green" else key << "-red" end
-			end
-			@image = @@loaded[key]
-
-			case @health
-			when Health::STUN_2
-				@health_image = @@loaded[:health][:red]
-			when Health::STUN_1
-				@health_image = @@loaded[:health][:yellow]
-			when Health::STUN_0
-				@health_image = @@loaded[:health][:green]
-			else
-				@health_image = nil
-			end
-		end
+		update_halo
+		update_health_bar
 
 		# Position update (aka movement)
 		unless @path.nil?
