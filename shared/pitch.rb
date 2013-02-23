@@ -31,10 +31,8 @@ class Pitch < GameObject
 		rotation_center(:top_left)
 	end
 
-	def start_new_game ball
-		raise ArgumentError unless ball.is_a? Ball
-		@ball = ball
-		each { |p| p.set_stage :stage => :play, :ball => @ball }
+	def start_new_game
+		each { |p| p.set_stage :stage => :play }
 	end
 
 	def new_turn!
@@ -97,24 +95,33 @@ class Pitch < GameObject
 		@unlock_listener = block
 	end
 
-	def load teams
-		@teams = teams
-		Configuration[:teams].each do |num, team|
-			race = team[:race]
-			team[:players].each do |player|
-				role = player[:role]
-				x, y  = player[:pos]
-				@teams[num] << Player.create(
-					:team => @teams[num],
-					:x => x,
-					:y => y,
-					:pitch => self,
-					:race => race,
-					:role => role
-				)
+	def load value
+		if value.is_a? Ball
+			@ball = value
+			each { |pl| pl.load @ball }
+		elsif value.is_a? Array
+			raise ArgumentError unless value.length == 2
+			value.each { |team| raise ArgumentError unless team.is_a? Team}
+			@teams = value
+			Configuration[:teams].each do |num, team|
+				race = team[:race]
+				team[:players].each do |player|
+					role = player[:role]
+					x, y  = player[:pos]
+					@teams[num] << Player.create(
+						:team => @teams[num],
+						:x => x,
+						:y => y,
+						:pitch => self,
+						:race => race,
+						:role => role
+					)
+				end
 			end
+			@teams.each { |t| @active_team = t if t.active? }
+			@active_team.new_turn!
+		else
+			raise ArgumentError, "Can not load this : #{value.inspect}"
 		end
-		@teams.each { |t| @active_team = t if t.active? }
-		@active_team.new_turn!
 	end
 end

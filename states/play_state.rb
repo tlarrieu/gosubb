@@ -28,10 +28,15 @@ class PlayState < GameState
 			:escape => :show_menu
 		}
 
-		@pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
+		# @pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
+		add_game_object @pitch.ball
 		add_game_object @pitch
-		@pitch.each { |p| add_game_object p }
+		@pitch.each do |p|
+			add_game_object p
+			p.set_stage :play
+		end
 		@pitch.on_unlock { show_movement }
+		@pitch.ball.on_square_entered { |x, y| @pitch[[x, y]].catch! if @pitch[[x, y]]}
 
 		@action_coords = nil
 		@selected      = nil

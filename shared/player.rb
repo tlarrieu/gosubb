@@ -231,6 +231,10 @@ module PlayerStates
 		@has_ball
 	end
 
+	def can_kickoff?
+		not @team.active? and pos[1] > 3 and pos[1] < 11 and pos[0] != 12 and pos[0] != 13
+	end
+
 	# +++++++++++++++++
 	# Position / Movement
 	# +++++++++++++++++
@@ -416,14 +420,15 @@ class Player < GameObject
 		@health     = Health::OK
 	end
 
-	def set_stage options={}
-		raise ArgumentError unless [:play, :configure].include? options[:stage]
-		raise ArgumentError if options[:stage] == :play and not options[:ball].is_a? Ball
-		if options[:stage] == :play
-			@ball = options[:ball]
-			@has_ball = @ball.pos == pos
-		end
-		@stage = options[:stage]
+	def set_stage symb
+		raise ArgumentError unless [:play, :configure].include? symb
+		@stage = symb
+	end
+
+	def load ball
+		raise ArgumentError, "Can not load this : #{ball.inspect}" unless ball.is_a? Ball
+		@ball = ball
+		@has_ball = @ball.pos == pos
 	end
 
 	def select

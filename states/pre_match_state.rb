@@ -43,20 +43,20 @@ class PreMatchState < GameState
 	def show_menu
 		items = { "Kick-off" => lambda{ choose :kickoff }, "Catch" => lambda{ choose :catch } }.sort_by { |key,value| key }
 		@menu = Menu.create :menu_items => items,
-		                    :x => $window.width / 2.0 + 50,
-		                    :y => @circle_y + @circle_r + 20 ,
-		                    :zorder => 200,
-		                    :select_color => 0xFF0056D6,
-		                    :unselect_color => 0xFFFFFFFF,
-		                    :spacing => 30,
-		                    :bg_padding_r => 5,
-		                    :bg_padding_l => 5,
-		                    :bg_padding_t => 30,
-		                    :bg_padding_b => 5,
-		                    :anchor => :center_center,
-		                    :font => "media/fonts/averia_rg.ttf",
-		                    :font_size => 35,
-		                    :orientation => :horizontal
+			:x => $window.width / 2.0 + 50,
+			:y => @circle_y + @circle_r + 20 ,
+			:zorder => 200,
+			:select_color => 0xFF0056D6,
+			:unselect_color => 0xFFFFFFFF,
+			:spacing => 30,
+			:bg_padding_r => 5,
+			:bg_padding_l => 5,
+			:bg_padding_t => 30,
+			:bg_padding_b => 5,
+			:anchor => :center_center,
+			:font => "media/fonts/averia_rg.ttf",
+			:font_size => 35,
+			:orientation => :horizontal
 	end
 
 	def choose action

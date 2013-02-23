@@ -66,13 +66,27 @@ class Ball < GameObject
 		t_x, t_y = coords
 		x, y = 0, 0
 		dist.times do
-			while [x, y] == [0,0]
+			while [x, y] == [0, 0]
 				x = [-1, 0, 1].sample
 				y = [-1, 0, 1].sample
 			end
 			t_x += x
 			t_y += y
 		end
+
+		move_to! t_x, t_y
+	end
+
+	def scatter_kickoff! coords=pos
+		t_x, t_y = coords
+		x, y = 0, 0
+		while [x, y] == [0, 0]
+			x = [-1, 0, 1].sample
+			y = [-1, 0, 1].sample
+		end
+		dist = rand(1..6)
+		t_x += dist * x
+		t_y += dist * y
 
 		move_to! t_x, t_y
 	end
@@ -90,9 +104,14 @@ class Ball < GameObject
 
 			if [@target_x, @target_y] == [@x, @y]
 				x, y = to_pitch_coords [@x, @y]
-				@pitch[[x,y]].catch! unless @pitch[[x,y]].nil?
+				@square_entered_listener.call(x, y) if @square_entered_listener
+				# @pitch[[x,y]].catch! unless @pitch[[x,y]].nil?
 				@pitch.unlock
 			end
 		end
+	end
+
+	def on_square_entered &block
+		@square_entered_listener = block
 	end
 end

@@ -30,6 +30,7 @@ class Game < Window
 		@cursor_image = Cursor.create
 
 		push_game_state PreMatchState.new
+
 	end
 
 	def update
