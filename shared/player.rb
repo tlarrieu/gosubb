@@ -461,17 +461,13 @@ class Player < GameObject
 	end
 
 	def update_halo
-		# key = "#{@race}/#{@role}#{@team.side}"
 		if @selected
-			# key << "-yellow"
 			set_halo :yellow
 		elsif @team.active? and @stage == :play
-			# if can_move? then key << "-green" else key << "-red" end
 			if can_move? then set_halo :green else set_halo :red end
 		else
 			set_halo :none
 		end
-		# @image = @@loaded[key]
 	end
 
 	def set_halo value
@@ -500,8 +496,10 @@ class Player < GameObject
 	def update
 		super
 		# Image update
-		update_halo
-		update_health_bar
+		if @stage == :play
+			update_halo
+			update_health_bar
+		end
 
 		# Position update (aka movement)
 		unless @path.nil?

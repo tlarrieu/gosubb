@@ -12,12 +12,21 @@ class KickoffState < GameState
 		super
 		@pitch = options[:pitch] || raise(ArgumentError, "You did not specify a pitch for #{self}")
 		add_game_object @pitch
-		@pitch.each { |p| add_game_object p }
+		@pitch.each do |p|
+			add_game_object p
+			p.set_halo :green if p.can_kickoff?
+		end
 
 		self.input = {
 			:escape => lambda {push_game_state MainMenuState.new },
 			:mouse_right => :action
 		}
+
+		params = { :x => 20, :y => 870, :color => 0xFF0000FF, :zorder => 1000, :rotation_center => :center_left }
+		if @pitch.active_team.side == :A
+			params.merge! :x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000
+		end
+		@text = Text.create "Choose a player to kick the ball", params
 
 		@hud  = HUD.create
 		@step = 0
@@ -48,6 +57,7 @@ class KickoffState < GameState
 					player = @pitch[@action_coords]
 					place_ball @action_coords if player and player.can_kickoff?
 					$window.change_cursor :normal
+					@text.text = "Kickoff!"
 					@step += 1
 				when 1
 					kickoff @action_coords
