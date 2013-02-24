@@ -22,7 +22,7 @@ class KickoffState < GameState
 			:mouse_right => :action
 		}
 
-		params = { :x => 20, :y => 870, :color => 0xFF0000FF, :zorder => 1000, :rotation_center => :center_left }
+		params = { :x => 20, :y => 910, :color => 0xFF0000FF, :zorder => 1000, :rotation_center => :center_left }
 		if @pitch.active_team.side == :A
 			params.merge! :x => $window.width - 20, :rotation_center => :center_right, :color => 0xFFFF0000
 		end
@@ -38,6 +38,7 @@ class KickoffState < GameState
 		unless cursor_coords == @cursor_coords
 			@cursor_coords = cursor_coords
 			player = @pitch[@cursor_coords]
+			@hud.show player
 			if @step == 0
 				if player and player.can_kickoff?
 					$window.change_cursor :ball
@@ -82,8 +83,6 @@ class KickoffState < GameState
 		@pitch.on_unlock do
 			close
 			push_game_state PlayState.new(:pitch => @pitch)
-			@ball.on_square_entered {}
-			@pitch.on_unlock {}
 		end
 	end
 end

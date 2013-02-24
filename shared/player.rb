@@ -62,6 +62,7 @@ module PlayerActions
 			@has_moved = true
 			@health = Health::OK
 			@cur_ma -= 3
+			update_health_bar
 			true
 		else
 			false
@@ -82,7 +83,8 @@ module PlayerActions
 
 	def pass target_player
 		if can_pass_to? target_player
-			@can_move, @has_ball = false, false
+			@has_ball = false
+			cant_move!
 
 			case roll :pass, target_player.pos
 			when :success
@@ -110,7 +112,8 @@ module PlayerActions
 
 	def handoff target_player
 		if can_handoff_to? target_player
-			@can_move, @has_ball = false, false
+			@has_ball = false
+			cant_move!
 			x, y = target_player.pos
 			Sample["pass_fast.ogg"].play
 			@ball.move_to! x, y
@@ -178,6 +181,7 @@ module PlayerActions
 			@health = Health::STUN_1
 			Sample["fall.ogg"].play
 		end
+		update_health_bar
 		lose_ball
 	end
 
@@ -283,6 +287,7 @@ module PlayerStates
 	def cant_move!
 		@can_move = false
 		@cur_ma   = 0
+		update_halo
 	end
 
 	def has_moved?
@@ -423,6 +428,7 @@ class Player < GameObject
 	def set_stage symb
 		raise ArgumentError unless [:play, :configure].include? symb
 		@stage = symb
+		update_halo
 	end
 
 	def load ball
@@ -433,10 +439,12 @@ class Player < GameObject
 
 	def select
 		@selected = true
+		update_halo
 	end
 
 	def unselect
 		@selected = false
+		update_halo
 	end
 
 	def new_turn!
@@ -447,6 +455,8 @@ class Player < GameObject
 		@path      = nil
 		@blitz     = false
 		@health -= 1 if (Health::STUN_1..Health::STUN_2).member? @health
+		update_health_bar
+		update_halo
 	end
 
 	def end_turn
@@ -495,11 +505,6 @@ class Player < GameObject
 
 	def update
 		super
-		# Image update
-		if @stage == :play
-			update_halo
-			update_health_bar
-		end
 
 		# Position update (aka movement)
 		unless @path.nil?

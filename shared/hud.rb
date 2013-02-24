@@ -80,7 +80,7 @@ class TeamBlock < GameObject
 
 		@score = Text.create "#{@team.score}", :x => @x, :y => @y - 30, :rotation_center => rot_cent, :color => color, :size => 40
 		@turn  = Text.create "#{@team.turn} / 16", :x =>  @x, :y => @y + 30, :rotation_center => rot_cent, :color => color, :size => 35
-		if @team.active
+		if @team.active?
 			@time = Text.create "4:00", :x => @x - a_x * 280, :y => @y, :rotation_center => rot_cent, :color => color, :size => 40
 		else
 			@time = Text.create "", :x => @x - a_x * 280, :y => @y, :rotation_center => rot_cent, :color => color, :size => 40

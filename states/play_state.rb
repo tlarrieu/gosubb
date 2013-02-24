@@ -28,7 +28,6 @@ class PlayState < GameState
 			:escape => :show_menu
 		}
 
-		# @pitch.start_new_game Ball.create(:pitch => @pitch, :x => 12, :y => 8)
 		add_game_object @pitch.ball
 		add_game_object @pitch
 		@pitch.each do |p|

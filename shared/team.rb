@@ -3,7 +3,7 @@ include Gosu
 include Chingu
 
 class Team
-	attr_accessor :time, :active
+	attr_accessor :time
 	attr_reader   :side, :image, :race, :points
 	alias :score :points
 
@@ -59,7 +59,12 @@ class Team
 		@blitz   = false
 		@pass    = false
 		@handoff = false
-		@players.each { |p| p.new_turn! }
+		each { |p| p.new_turn! }
+	end
+
+	def active= val
+		@active = val
+		each { |p| p.update_halo }
 	end
 
 	def end_turn!
@@ -107,6 +112,11 @@ class Team
 
 	def active?
 		@active
+	end
+
+	def active= val
+		@active = val
+		each { |p| p.update_halo }
 	end
 
 	def number
