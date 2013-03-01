@@ -17,8 +17,6 @@ require "cursor"
 include GameStates
 
 class Game < Window
-	attr_accessor :selected
-
 	def initialize
 		super 1384, 984, true
 		self.input   = { :q => :close }
@@ -26,8 +24,6 @@ class Game < Window
 		self.factor  = 1
 		FPSText.create "fps", :x => 15, :y => 25, :zorder => 1000
 		@cursor_image = Cursor.create
-
-		# push_game_state(FadeTo.new(LoadingState.new, :speed => 10))
 		push_game_state LoadingState.new
 	end
 

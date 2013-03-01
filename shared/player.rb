@@ -444,7 +444,7 @@ class Player < GameObject
 	def load ball
 		raise ArgumentError, "Can not load this : #{ball.inspect}" unless ball.is_a? Ball
 		@ball = ball
-		@has_ball = @ball.pos == pos
+		# @has_ball = @ball.pos == pos
 	end
 
 	def select
