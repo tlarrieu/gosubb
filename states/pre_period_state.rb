@@ -12,15 +12,18 @@ class PrePeriodState < GameState
 	include Helpers::Measures
 
 	def initialize options = {}
+		raise ArgumentError, "Missing parameter : pitch" unless options[:pitch]
 		super
 		@pitch = options[:pitch]
-		@teams = options[:teams]
-		@pitch.load @teams
 
 		add_game_object @pitch
-		@pitch.each { |p| add_game_object p }
+		@pitch.each do
+			|p| add_game_object p
+			p.set_stage :config
+			p.reset
+		end
 		self.input = {
-			:escape => lambda {push_game_state MainMenuState.new },
+			:escape => lambda { push_game_state MainMenuState.new },
 			:space => :next_step,
 			:mouse_left => :select,
 			:mouse_right => :move
@@ -76,7 +79,7 @@ class PrePeriodState < GameState
 		valid = true
 		@texts.each { |t| t.destroy! }
 		@texts.clear
-		@teams.each do |team|
+		@pitch.teams.each do |team|
 			top_players       = 0
 			middle_players    = 0
 			bottom_players    = 0

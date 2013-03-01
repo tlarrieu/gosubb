@@ -11,8 +11,8 @@ include Gosu
 include Chingu
 
 require "floating_text"
-require "pre_match_state"
-require "shared/cursor"
+require "loading_state"
+require "cursor"
 
 include GameStates
 
@@ -24,13 +24,11 @@ class Game < Window
 		self.input   = { :q => :close }
 		self.cursor  = false
 		self.factor  = 1
-
 		FPSText.create "fps", :x => 15, :y => 25, :zorder => 1000
-
 		@cursor_image = Cursor.create
 
-		push_game_state PreMatchState.new
-
+		# push_game_state(FadeTo.new(LoadingState.new, :speed => 10))
+		push_game_state LoadingState.new
 	end
 
 	def update
@@ -41,6 +39,10 @@ class Game < Window
 	def change_cursor symb, secondary = nil
 		@cursor_image.set_image symb
 		@cursor_image.set_secondary_image secondary if secondary
+	end
+
+	def current_scope= scope
+		@current_scope = scope
 	end
 end
 

@@ -210,6 +210,7 @@ module PlayerStates
 	# +++++++++++++++++
 
 	def can_pass_to? target_player
+		return false unless target_player.is_a? Player
 		res = can_move?
 		res &= @has_ball
 		res &= !@team.pass?
@@ -221,6 +222,7 @@ module PlayerStates
 	end
 
 	def can_handoff_to? target_player
+		return false unless target_player.is_a? Player
 		res = can_move?
 		res &= @has_ball
 		res &= !@team.handoff?
@@ -414,19 +416,27 @@ class Player < GameObject
 			@@loaded[:health] = {:red => Image["health_red.png"], :yellow => Image["health_yellow.png"], :green => Image["health_green.png"]}
 		end
 		@x, @y      = to_screen_coords [options[:x], options[:y]] rescue nil
+		@initial_x, @initial_y = @x, @y
 		@velocity   = 0.23
 
 		@footsteps  = Sample["footsteps.ogg"]
 
 		@stats      = Races[race][role][:stats]
 		@skills     = Races[race][role][:skills]
-		@has_ball   = options[:has_ball] or false
-		@stage      = options[:stage] or :configure
+		@has_ball   = options[:has_ball] || false
 		@health     = Health::OK
+		stage       = options[:stage] || :config
+		set_stage stage
+	end
+
+	def reset
+		@x, @y = @initial_x, @initial_y
+		unselect
+		update_health_bar
 	end
 
 	def set_stage symb
-		raise ArgumentError unless [:play, :configure].include? symb
+		raise ArgumentError, "Unknown stage #{symb}" unless [:play, :config].include? symb
 		@stage = symb
 		update_halo
 	end
@@ -491,13 +501,17 @@ class Player < GameObject
 	end
 
 	def update_health_bar
-		case @health
-		when Health::STUN_2
-			@health_image = @@loaded[:health][:red]
-		when Health::STUN_1
-			@health_image = @@loaded[:health][:yellow]
-		when Health::STUN_0
-			@health_image = @@loaded[:health][:green]
+		if @stage == :play
+			case @health
+			when Health::STUN_2
+				@health_image = @@loaded[:health][:red]
+			when Health::STUN_1
+				@health_image = @@loaded[:health][:yellow]
+			when Health::STUN_0
+				@health_image = @@loaded[:health][:green]
+			else
+				@health_image = nil
+			end
 		else
 			@health_image = nil
 		end

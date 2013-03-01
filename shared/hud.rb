@@ -5,12 +5,10 @@ include Chingu
 require "helpers/barrier"
 
 class HUD < GameObject
-
 	def initialize options = {}
 		super :x => 0, :y => 799
 		@width  = $window.width
 		@height = 200
-
 
 		@bg = Image["hud2.png"]
 
@@ -19,7 +17,7 @@ class HUD < GameObject
 		center_x = @x + @width / 2.0
 		center_y = @y + @height / 2.0 + 20
 
-		teams  = options[:teams]
+		teams = options[:teams]
 		if teams
 			pitch  = options[:pitch] || raise(ArgumentError, "Missing argument :pitch")
 			TeamBlock.create :team => teams[0],
@@ -86,7 +84,7 @@ class TeamBlock < GameObject
 			@time = Text.create "", :x => @x - a_x * 280, :y => @y, :rotation_center => rot_cent, :color => color, :size => 40
 		end
 
-		@team.on_turn_change { |turn| @turn.text = "#{turn} / 16" }
+		@team.on_turn_change  { |turn|  @turn.text = "#{turn} / 16" }
 		@team.on_score_change { |score| @score.text = "#{score}" }
 
 		@elapsed_time = 0

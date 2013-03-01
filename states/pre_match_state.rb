@@ -11,25 +11,17 @@ require "pre_period_state"
 class PreMatchState < GameState
 	def initialize options = {}
 		super
+		self.input = { :escape => lambda {push_game_state MainMenuState.new } }
 		@choice = rand(0..1)
-
 		@pitch = Pitch.create
-
-		@teams = options[:teams]
-		unless @teams
-			@teams = []
-			@teams << Team.new( :name => "TROLOLOL", :race => Configuration[:teams][0][:race], :side => :A, :pitch => @pitch )
-			@teams << Team.new( :name => "OTAILLO", :race => Configuration[:teams][1][:race], :side => :B, :pitch => @pitch )
-		end
-
-		@image = @teams[@choice].image
+		@teams = []
+		@teams << Team.new( :name => "TROLOLOL", :race => Configuration[:teams][0][:race], :side => :A, :pitch => @pitch )
+		@teams << Team.new( :name => "OTAILLO", :race => Configuration[:teams][1][:race], :side => :B, :pitch => @pitch )
+		@image    = @teams[@choice].image
 		@circle_r = [@image.width, @image.height].max + 2
 		@circle_x = $window.width / 2
 		@circle_y = $window.height / 2 - 100
 		@circle_c = if @choice == 0 then 0xFF0000FF else 0xFFFF0000 end
-
-		self.input = { :escape => lambda {push_game_state MainMenuState.new } }
-
 		show_menu
 	end
 
@@ -61,13 +53,15 @@ class PreMatchState < GameState
 
 	def choose action
 		close
-
+		@teams.clear
+		@teams << Team.new( :name => "TROLOLOL", :race => Configuration[:teams][0][:race], :side => :A, :pitch => @pitch )
+		@teams << Team.new( :name => "OTAILLO", :race => Configuration[:teams][1][:race], :side => :B, :pitch => @pitch )
 		if action == :catch
 			@teams[@choice].active = true
 		else
 			@teams[(@choice + 1) % 2].active = true
 		end
-
+		@pitch.load @teams
 		push_game_state PrePeriodState.new(:pitch => @pitch, :teams => @teams)
 	end
 end

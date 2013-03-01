@@ -4,7 +4,7 @@ include Chingu
 
 class Team
 	attr_accessor :time
-	attr_reader   :side, :image, :race, :points
+	attr_reader   :side, :image, :race, :points, :parent
 	alias :score :points
 
 	@@loaded = {}
@@ -12,24 +12,17 @@ class Team
 	def initialize options = {}
 		@name   = options[:name]   || ""
 		@ai     = options[:ai]     || false
-
 		@active = options[:active] || false
-
 		@side   = options[:side]   || :A
 		@race   = options[:race]   || raise(ArgumentError, "You did not specify a race for #{self}")
+		@pitch  = options[:pitch]  || raise(ArgumentError, "You did not specify a pitch for #{self}")
 
 		@@loaded[@race] = Image["teams/logos/#{@race}.gif"] unless @@loaded[@race]
 		@image  = @@loaded[@race]
 
-		@pitch = options[:pitch]   || raise(ArgumentError, "You did not specify a pitch for #{self}")
-
 		@players = []
 
-		@turn_listeners  = []
-		@score_listeners = []
-
-		@time  = 240_000
-		@turns = 0
+		@time, @turns  = 240_000, 0
 
 		new_period!
 	end
@@ -51,6 +44,7 @@ class Team
 		@points = 0
 		@turn   = 0
 		@blitz  = false
+		@reroll = 3
 	end
 
 	def new_turn!
@@ -100,6 +94,11 @@ class Team
 		when :score
 			@points += 1
 			@score_listener.call(@points) if @score_listener
+			# TODO : This is very ugly, we have to find something cleaner
+			game_state_manager = $window.game_state_manager
+			current_game_state = game_state_manager.current_game_state
+			current_game_state = current_game_state.close if current_game_state
+			game_state_manager.push_game_state PrePeriodState.new(:pitch => @pitch)
 		when :turn
 			@turns += 1
 			@turn_listener.call(@turns) if @turn_listener
