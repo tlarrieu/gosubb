@@ -48,6 +48,7 @@ class PlayState < GameState
 	def setup
 		# Here we force refresh of the movemement allowance
 		# we do that to fix a glitch occuring when leaving dice menu state
+		@pitch.each { |p| p.update_halo }
 		show_movement
 	end
 

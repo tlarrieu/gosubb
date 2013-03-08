@@ -22,6 +22,7 @@ class PrePeriodState < GameState
 			p.set_stage :config
 			p.reset
 		end
+
 		self.input = {
 			:escape => lambda { push_game_state MainMenuState.new },
 			:space => :next_step,
@@ -37,7 +38,7 @@ class PrePeriodState < GameState
 	def update
 		super
 		overred = @pitch[to_pitch_coords [$window.mouse_x, $window.mouse_y]]
-		if overred then @hud.show overred else @hud.clear end
+		if overred then @hud.show(overred) else @hud.clear end
 	end
 
 	def select

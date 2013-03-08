@@ -84,7 +84,7 @@ class TeamBlock < GameObject
 			@time = Text.create "", :x => @x - a_x * 280, :y => @y, :rotation_center => rot_cent, :color => color, :size => 40
 		end
 
-		@team.on_turn_change  { |turn|  @turn.text = "#{turn} / 16" }
+		@team.on_turn_change  { |turn|  @turn.text  = "#{turn} / 16" }
 		@team.on_score_change { |score| @score.text = "#{score}" }
 
 		@elapsed_time = 0

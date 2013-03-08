@@ -394,7 +394,7 @@ class Player < GameObject
 
 	traits :bounding_circle
 	attr_reader :team, :cur_ma, :stats, :skills, :race, :role, :health
-	attr_accessor :perfect_pass_incoming, :x, :y
+	attr_accessor :perfect_pass_incoming, :x, :y, :has_ball
 
 	@@loaded = {}
 
@@ -444,7 +444,6 @@ class Player < GameObject
 	def load ball
 		raise ArgumentError, "Can not load this : #{ball.inspect}" unless ball.is_a? Ball
 		@ball = ball
-		# @has_ball = @ball.pos == pos
 	end
 
 	def select
