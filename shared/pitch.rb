@@ -12,6 +12,7 @@ class Pitch < GameObject
 	include Helpers::Measures
 	include Helpers::Barrier
 
+	traits :bounding_box
 	attr_reader :teams, :active_team, :ball
 
 	WIDTH       = 26

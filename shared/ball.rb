@@ -35,6 +35,20 @@ class Ball < GameObject
 		end
 	end
 
+	def handoff_to! x, y
+		@handoff = true
+		move_to! x, y
+	end
+
+	def handoff?
+		@handoff
+	end
+
+	def handoff= value
+		raise("Argument should be a boolean") unless value == true or value == false
+		@handoff = value
+	end
+
 	##
 	# Takes pitch coordinates
 	def move_by! x, y
@@ -62,7 +76,6 @@ class Ball < GameObject
 
 	def scatter! dist=1, coords=pos
 		return nil if coords.nil? or dist == 0
-
 		t_x, t_y = coords
 		x, y = 0, 0
 		dist.times do
@@ -73,7 +86,19 @@ class Ball < GameObject
 			t_x += x
 			t_y += y
 		end
+		move_to! t_x, t_y
+	end
 
+	def scatter_from_last_pos!
+		t_x, t_y = to_pitch_coords [@last_x, @last_y]
+		x, y = 0, 0
+		while [x, y] == [0, 0] and not @pitch.collision_at?(to_screen_coords(@last_pos))
+			x = [-1, 0, 1].sample
+			y = [-1, 0, 1].sample
+		end
+		dist = rand(1..6)
+		t_x += dist * x
+		t_y += dist * y
 		move_to! t_x, t_y
 	end
 
@@ -87,17 +112,18 @@ class Ball < GameObject
 		dist = rand(1..6)
 		t_x += dist * x
 		t_y += dist * y
-
 		move_to! t_x, t_y
 	end
 
 	def update
 		ms = $window.milliseconds_since_last_tick rescue nil
-		unless [@target_x, @target_y] == [@x, @y]
-			_dist = dist [@target_x, @target_y], [@x, @y], :cartesian
+		unless [@target_x, @target_y] == screen_pos
+			tmp = to_screen_coords pos
+			@last_x, @last_y = @x, @y if @pitch.collision_at? tmp[0], tmp[1]
+			d = dist [@target_x, @target_y], [@x, @y], :cartesian
 
-			vx     = (@target_x - @x) / _dist * @velocity * ms
-			vy     = (@target_y - @y) / _dist * @velocity * ms
+			vx = (@target_x - @x) / d * @velocity * ms
+			vy = (@target_y - @y) / d * @velocity * ms
 
 			if (@x - @target_x).abs < 5 then @x = @target_x else @x = @x + vx end
 			if (@y - @target_y).abs < 5 then @y = @target_y else @y = @y + vy end
@@ -105,7 +131,7 @@ class Ball < GameObject
 			if [@target_x, @target_y] == [@x, @y]
 				x, y = to_pitch_coords [@x, @y]
 				@square_entered_listener.call(x, y) if @square_entered_listener
-				# @pitch[[x,y]].catch! unless @pitch[[x,y]].nil?
+				@pitch_left_listener.call if @pitch_left_listener unless @pitch.collision_at?(@x, @y)
 				@pitch.unlock
 			end
 		end
@@ -113,5 +139,9 @@ class Ball < GameObject
 
 	def on_square_entered &block
 		@square_entered_listener = block
+	end
+
+	def on_pitch_left &block
+		@pitch_left_listener = block
 	end
 end

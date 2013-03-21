@@ -116,7 +116,7 @@ module PlayerActions
 			cant_move!
 			x, y = target_player.pos
 			Sample["pass_fast.ogg"].play
-			@ball.move_to! x, y
+			@ball.handoff_to! x, y
 			event! :pass
 			@team.handoff!
 		else
@@ -125,17 +125,16 @@ module PlayerActions
 	end
 
 	def catch!
-		res = roll :catch
 		@perfect_pass_incoming = false
-		if res == :success
+		if @ball.handoff? or (roll :catch) == :success
 			@has_ball = true
 			event! :catch
 			return true
 		else
 			@ball.scatter!
 			event! :fail
+			return false
 		end
-		false
 	end
 
 	def lose_ball
@@ -327,6 +326,7 @@ module PlayerStates
 	end
 
 	def could_block? target_player
+		return nil unless target_player
 		res = ((can_move? and @cur_ma == @stats[:ma]) or @blitz)
 		res &= target_player
 		res &= target_player.team != @team

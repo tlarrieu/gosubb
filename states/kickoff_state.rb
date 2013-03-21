@@ -17,7 +17,6 @@ class KickoffState < GameState
 			add_game_object p
 			if p.can_kickoff? then p.set_halo :green else p.set_halo :none end
 		end
-
 		self.input = {
 			:escape => lambda {push_game_state MainMenuState.new },
 			:mouse_right => :action

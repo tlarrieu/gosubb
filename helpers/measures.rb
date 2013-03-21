@@ -29,8 +29,8 @@ module Measures
 		end
 	end
 
-	# TODO: handle non connexity (infinite loop involved there :( )
-	# TODO2: include a way to take tackle zones into account (we still have to decide how much we want to help human player)
+	# TODO: handle non connexity (infinite loop involved there :( )
+	# TODO 2: include a way to take tackle zones into account (we still have to decide how much we want to help human player)
 	def a_star pitch, start, goal
 		# The set of nodes already evaluated.
 		closedset = []

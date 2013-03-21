@@ -36,6 +36,7 @@ class PlayState < GameState
 		end
 		@pitch.on_unlock { show_movement }
 		@pitch.ball.on_square_entered { |x, y| @pitch[[x, y]].catch! if @pitch[[x, y]]}
+		@pitch.ball.on_pitch_left { @pitch.ball.scatter_from_last_pos! }
 
 		@action_coords = nil
 		@selected      = nil
