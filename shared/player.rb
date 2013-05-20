@@ -127,6 +127,7 @@ module PlayerActions
 	def catch!
 		@perfect_pass_incoming = false
 		if @ball.handoff? or (roll :catch) == :success
+			@ball.handoff = false
 			@has_ball = true
 			event! :catch
 			return true
@@ -300,6 +301,7 @@ module PlayerStates
 	end
 
 	def close_to? player
+		return false unless player
 		return dist(self, player, :infinity) == 1
 	end
 

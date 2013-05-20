@@ -16,7 +16,7 @@ class Ball < GameObject
 		@velocity = 0.4
 
 		@target_x, @target_y = x, y
-		@@instance = self
+		@last_x, @last_y = pos
 	end
 
 	##
@@ -92,7 +92,7 @@ class Ball < GameObject
 	def scatter_from_last_pos!
 		t_x, t_y = to_pitch_coords [@last_x, @last_y]
 		x, y = 0, 0
-		while [x, y] == [0, 0] and not @pitch.collision_at?(to_screen_coords(@last_pos))
+		while [x, y] == [0, 0] and not @pitch.collision_at?(to_screen_coords([@last_x, @last_y]))
 			x = [-1, 0, 1].sample
 			y = [-1, 0, 1].sample
 		end
