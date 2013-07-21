@@ -20,12 +20,8 @@ is cleary not a main priority as for now.
 INSTALLATION
 ============
 
-In addition to the files you will find on this repository, you will also need 2 additional gems : 
-* gem install chingu
-* gem install gosu
-
-Please refer to the following page : https://github.com/jlnr/gosu/wiki
-
+Before running main.rb, either install gosu gem manually or run bundler.
+Whichever way you choose, please consider refering to this piece of documentation : https://github.com/jlnr/gosu/wiki.
 It contains additionnal information on steps to follow to install gosu properly (the library needs a few more packages, which depends on the OS you are running)
 
 RUN
@@ -33,9 +29,8 @@ RUN
 
 Just run main.rb. If you are lazy enough, you can also call rake at the root of the project, which will run it for you!
 
-/!\ The project has only been tested with ruby-1.9.3, gosu-0.7.45 and chingu-0.8.1.
-
 /!\ The first screen displayed is not yet fully functionnal. It will be used to setup teams before kick-off.
+
 As for now, just hit enter to avoid this step.
 
 Keys :
